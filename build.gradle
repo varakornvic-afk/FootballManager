@@ -15,9 +15,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.withType(JavaCompile).configureEach {
-    options.release = 17   // ให้ jar รันได้บน Java 17 ขึ้นไป
-}
 
 test {
     useJUnitPlatform()
@@ -28,4 +25,12 @@ jar {
     manifest {
         attributes 'Main-Class': 'football.Main'
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 17
+    options.encoding = 'UTF-8'
+}
+javadoc {
+    options.encoding = 'UTF-8'
 }

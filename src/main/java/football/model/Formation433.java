@@ -9,4 +9,7 @@ public class Formation433 extends Formation {
     public double fitFor(Tactic tactic) {
         return tactic instanceof Possession ? SPECIALIST_FIT : OFF_PLAN_FIT;
     }
+
+    @Override
+    public SlotLayout getSlots() { return new SlotLayout(2, 2, 3, 0, 1, 2); }
 }

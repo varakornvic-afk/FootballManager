@@ -1,0 +1,247 @@
+package football.model;
+
+import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.ToIntFunction;
+
+/** ทีมหนึ่งฝั่ง: แทคติก (ล็อก) + ฟอร์เมชัน + โหมด + ตัวจริง 11 + สำรอง immutable ทุกการเปลี่ยนคืนอ็อบเจ็กต์ใหม่ */
+public final class TeamSetup {
+    public static final int LINEUP_SIZE = 11;
+    public static final int BENCH_SIZE = 5;
+    public static final int MAX_SUBSTITUTIONS = 3;
+
+    private static final double FATIGUE_RATE = 0.3;
+    private static final double FIT_RANGE = 0.1;
+    private static final double BASE_AVERAGE = 4.0; // ค่าเฉลี่ยสถิติ = 24 / 6
+
+    private final Tactic tactic;
+    private final Formation formation;
+    private final Stance stance;
+    private final List<Player> starters;
+    private final List<Player> bench;
+    private final int substitutionsUsed;
+    private final Set<Player> tired;
+    private final Map<Player, Position> assignment;
+
+    public static TeamSetup create(Tactic tactic, Formation formation, Stance stance,
+                                   List<Player> starters, List<Player> bench) {
+        Objects.requireNonNull(bench, "bench");
+        if (bench.size() != BENCH_SIZE) {
+            throw new IllegalArgumentException("bench must have " + BENCH_SIZE + " players");
+        }
+        // [ปลดล็อค] เอาการเช็ค GK สำรองออก เพื่อให้เลือกตัวสำรองได้อย่างอิสระ
+        return new TeamSetup(tactic, formation, stance, starters, bench, 0, Set.of());
+    }
+
+    private TeamSetup(Tactic tactic, Formation formation, Stance stance,
+                      List<Player> starters, List<Player> bench,
+                      int substitutionsUsed, Set<Player> tired) {
+        this.tactic = Objects.requireNonNull(tactic, "tactic");
+        this.formation = Objects.requireNonNull(formation, "formation");
+        this.stance = Objects.requireNonNull(stance, "stance");
+        Objects.requireNonNull(starters, "starters");
+        Objects.requireNonNull(bench, "bench");
+        if (starters.size() != LINEUP_SIZE) {
+            throw new IllegalArgumentException("lineup must have " + LINEUP_SIZE + " players");
+        }
+        long keepers = starters.stream().filter(p -> p.getPosition() == Position.GK).count();
+        if (keepers != 1) {
+            throw new IllegalArgumentException("lineup needs exactly one goalkeeper");
+        }
+        Set<Player> all = new HashSet<>(starters);
+        all.addAll(bench);
+        if (all.size() != starters.size() + bench.size()) {
+            throw new IllegalArgumentException("a player appears more than once");
+        }
+        this.starters = List.copyOf(starters);
+        this.bench = List.copyOf(bench);
+        this.substitutionsUsed = substitutionsUsed;
+        this.tired = Set.copyOf(tired);
+        this.assignment = assign();
+    }
+
+    // ---------- การจัดคนลงช่อง ----------
+
+    /**
+     - 1) GK ลงช่อง GK  2) โหมดอุด/บุกหมด: เลือกตัวยืนเดี่ยว (ดูค่า shoot/defense คูณโทษตำแหน่ง)
+
+     - 3) จับคู่ตำแหน่งตรงก่อน  4) ที่เหลือลงช่องที่ระยะห่างน้อยสุด (เสมอกันใช้ลำดับในรายชื่อ)
+
+     */
+    private Map<Player, Position> assign() {
+        SlotLayout layout = stance.apply(formation.getSlots());
+        Map<Position, Integer> free = new EnumMap<>(Position.class);
+        for (Position p : Position.values()) {
+            free.put(p, layout.count(p));
+        }
+        Map<Player, Position> result = new LinkedHashMap<>();
+        List<Player> pool = new ArrayList<>();
+        for (Player p : starters) {
+            if (p.getPosition() == Position.GK) {
+                place(result, free, p, Position.GK);
+            } else {
+                pool.add(p);
+            }
+        }
+        if (stance == Stance.PARK_THE_BUS) {
+            Player lone = best(pool, Position.STRIKER, Player::getShoot);
+            pool.remove(lone);
+            place(result, free, lone, Position.STRIKER);
+        } else if (stance == Stance.ALL_OUT_ATTACK) {
+            Player lone = best(pool, Position.CENTER_BACK, Player::getDefense);
+            pool.remove(lone);
+            place(result, free, lone, Position.CENTER_BACK);
+        }
+        for (Player p : new ArrayList<>(pool)) {
+            if (free.get(p.getPosition()) > 0) {
+                pool.remove(p);
+                place(result, free, p, p.getPosition());
+            }
+        }
+        for (Player p : pool) {
+            place(result, free, p, closestFreeSlot(p, free));
+        }
+        return result;
+    }
+
+    private static Player best(List<Player> pool, Position slot, ToIntFunction<Player> stat) {
+        Player best = null;
+        double bestScore = -1;
+        for (Player p : pool) {
+            double score = stat.applyAsInt(p) * positionFactor(p.getPosition().distanceTo(slot));
+            if (score > bestScore) {
+                best = p;
+                bestScore = score;
+            }
+        }
+        return best;
+    }
+
+    private static Position closestFreeSlot(Player p, Map<Position, Integer> free) {
+        Position best = null;
+        int bestDistance = Integer.MAX_VALUE;
+        for (Position slot : Position.values()) {
+            if (slot == Position.GK || free.get(slot) <= 0) {
+                continue;
+            }
+            int d = p.getPosition().distanceTo(slot);
+            if (d < bestDistance) {
+                best = slot;
+                bestDistance = d;
+            }
+        }
+        return best;
+    }
+
+    private static void place(Map<Player, Position> result, Map<Position, Integer> free,
+                              Player p, Position slot) {
+        result.put(p, slot);
+        free.merge(slot, -1, Integer::sum);
+    }
+
+    // ---------- ค่าที่ใช้คำนวณ (ตัวตั้งต้น ไว้จูนทีหลัง) ----------
+
+    /** ตัวคูณสถิติตามระยะห่างจากตำแหน่งจริง */
+    public static double positionFactor(int distance) {
+        switch (distance) {
+            case 0: return 1.0;
+            case 1: return 0.9;
+            case 2: return 0.75;
+            default: return 0.6;
+        }
+    }
+
+    /** ตัวคูณความล้าหลังพักครึ่ง: ยิ่ง stamina ต่ำยิ่งล้ามาก */
+    public static double fatigueFactor(int stamina) {
+        return 1.0 - (FATIGUE_RATE / stamina);
+    }
+
+    public Position assignedPosition(Player player) {
+        Position slot = assignment.get(player);
+        if (slot == null) {
+            throw new IllegalArgumentException("player is not in the lineup");
+        }
+        return slot;
+    }
+
+    /** ค่าสถิติจริงในสนาม = ค่าเดิม x โทษผิดตำแหน่ง x ความล้า */
+    public double effectiveValue(Player player, int baseStat) {
+        double value = baseStat * positionFactor(player.getPosition().distanceTo(assignedPosition(player)));
+        if (tired.contains(player)) {
+            value *= fatigueFactor(player.getStamina());
+        }
+        return value;
+    }
+
+    /** ค่าเฉลี่ย fitScore ของแทคติก (หลังหักโทษ/ความล้า) ของ 11 คน */
+    public double averageFit() {
+        double sum = 0;
+        for (Player p : starters) {
+            sum += effectiveValue(p, tactic.fitScore(p));
+        }
+        return sum / starters.size();
+    }
+
+    /** ตัวคูณจากความเหมาะสมของนักเตะ ช่วง 0.9-1.1 (เฉลี่ย 4 = 1.0) */
+    public double fitMultiplier() {
+        double m = 1.0 + FIT_RANGE * (averageFit() - BASE_AVERAGE) / BASE_AVERAGE;
+        return Math.max(1.0 - FIT_RANGE, Math.min(1.0 + FIT_RANGE, m));
+    }
+
+    // ---------- การเปลี่ยนแปลง (คืนอ็อบเจ็กต์ใหม่) ----------
+
+    public TeamSetup withFormation(Formation newFormation) {
+        return new TeamSetup(tactic, newFormation, stance, starters, bench,
+                substitutionsUsed, tired);
+    }
+
+    public TeamSetup withStance(Stance newStance) {
+        return new TeamSetup(tactic, formation, newStance, starters, bench,
+                substitutionsUsed, tired);
+    }
+
+    /** เรียกตอนจบครึ่งแรก (ก่อนเปลี่ยนตัว): ทุกคนที่ลงอยู่ถูกนับว่าล้า */
+    public TeamSetup endFirstHalf() {
+        return new TeamSetup(tactic, formation, stance, starters, bench,
+                substitutionsUsed, new HashSet<>(starters));
+    }
+
+    public TeamSetup withSubstitution(Player out, Player in) {
+        if (substitutionsUsed >= MAX_SUBSTITUTIONS) {
+            throw new IllegalStateException("no substitutions left");
+        }
+        int index = starters.indexOf(out);
+        if (index < 0) {
+            throw new IllegalArgumentException("player to replace is not on the pitch");
+        }
+        if (!bench.contains(in)) {
+            throw new IllegalArgumentException("incoming player is not on the bench");
+        }
+        // หมายเหตุ: ตรงนี้ยังบล็อกเรื่องเปลี่ยนตัวโกลกับผู้เล่นสนาม หากต้องการปลดล็อคการเปลี่ยนตัวด้วย สามารถปรับแก้เงื่อนไขตรงนี้เพิ่มเติมได้ครับ
+        if ((out.getPosition() == Position.GK) != (in.getPosition() == Position.GK)) {
+            throw new IllegalArgumentException("goalkeeper can only be swapped with a goalkeeper");
+        }
+        List<Player> newStarters = new ArrayList<>(starters);
+        newStarters.set(index, in);
+        List<Player> newBench = new ArrayList<>(bench);
+        newBench.remove(in);
+        Set<Player> newTired = new HashSet<>(tired);
+        newTired.remove(out);
+        return new TeamSetup(tactic, formation, stance, newStarters, newBench,
+                substitutionsUsed + 1, newTired);
+    }
+
+    public Tactic getTactic() { return tactic; }
+    public Formation getFormation() { return formation; }
+    public Stance getStance() { return stance; }
+    public List<Player> getStarters() { return starters; }
+    public List<Player> getBench() { return bench; }
+    public int getSubstitutionsUsed() { return substitutionsUsed; }
+    public int getRemainingSubstitutions() { return MAX_SUBSTITUTIONS - substitutionsUsed; }
+}

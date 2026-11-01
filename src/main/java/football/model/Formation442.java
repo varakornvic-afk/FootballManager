@@ -9,4 +9,7 @@ public class Formation442 extends Formation {
     public double fitFor(Tactic tactic) {
         return VERSATILE_FIT;
     }
+
+    @Override
+    public SlotLayout getSlots() { return new SlotLayout(2, 2, 2, 2, 2, 0); }
 }

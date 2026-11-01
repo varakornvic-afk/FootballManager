@@ -27,4 +27,6 @@ public abstract class Formation {
     public int getControl() { return control; }
     public int getDefense() { return defense; }
     public double getExposure() { return exposure; }
+
+    public abstract SlotLayout getSlots();
 }

@@ -1,17 +1,30 @@
 package football.model;
 
-public final class Player {
-    public static final int TOTAL = 15;
+public class Player {
+    public static final int TOTAL = 24;
     public static final int MIN_STAT = 1;
-    public static final int MAX_STAT = 13;
+    public static final int MAX_STAT = 10;
 
     private final String name;
     private final Position position;
     private final int pace;
     private final int passing;
     private final int heading;
+    private final int stamina;
+    private final int shoot;
+    private final int defense;
+    private int saving;
 
-    public Player(String name, Position position, int pace, int passing, int heading) {
+    /** ผู้เล่นสนาม: 6 ค่ารวม 24 (ห้ามใช้ตำแหน่ง GK ให้ใช้ GoalKeeper) */
+    public Player(String name, Position position, int pace, int passing,
+                  int heading, int stamina, int shoot, int defense) {
+        this(name, requireOutfield(position), pace, passing, heading,
+                stamina, shoot, defense, 0);
+    }
+
+    /** extraPoints = แต้มที่คลาสลูกใช้กับสถิติพิเศษของตัวเอง (ผู้เล่นสนามเป็น 0) */
+    protected Player(String name, Position position, int pace, int passing,
+                     int heading, int stamina, int shoot, int defense, int extraPoints) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("name must not be blank");
         }
@@ -21,20 +34,34 @@ public final class Player {
         checkRange("pace", pace);
         checkRange("passing", passing);
         checkRange("heading", heading);
-        if (pace + passing + heading != TOTAL) {
-            throw new IllegalArgumentException("stats must sum to " + TOTAL);
+        checkRange("stamina", stamina);
+        checkRange("shoot", shoot);
+        checkRange("defense", defense);
+        int sum = pace + passing + heading + stamina + shoot + defense + extraPoints;
+        if (sum != TOTAL) {
+            throw new IllegalArgumentException("stats must sum to " + TOTAL + " but was " + sum);
         }
         this.name = name;
         this.position = position;
         this.pace = pace;
         this.passing = passing;
         this.heading = heading;
+        this.stamina = stamina;
+        this.shoot = shoot;
+        this.defense = defense;
     }
 
-    private static void checkRange(String label, int v) {
-        if (v < MIN_STAT || v > MAX_STAT) {
+    private static Position requireOutfield(Position position) {
+        if (position == Position.GK) {
+            throw new IllegalArgumentException("use GoalKeeper for position GK");
+        }
+        return position;
+    }
+
+    protected static void checkRange(String label, int value) {
+        if (value < MIN_STAT || value > MAX_STAT) {
             throw new IllegalArgumentException(
-                    label + " must be " + MIN_STAT + "-" + MAX_STAT + " but was " + v);
+                    label + " must be " + MIN_STAT + "-" + MAX_STAT + " but was " + value);
         }
     }
 
@@ -43,4 +70,14 @@ public final class Player {
     public int getPace() { return pace; }
     public int getPassing() { return passing; }
     public int getHeading() { return heading; }
+    public int getStamina() { return stamina; }
+    public int getShoot() { return shoot; }
+    public int getDefense() { return defense; }
+    public int getSaving() {return saving;}
+
+    @Override
+    public String toString() {
+        return String.format("%s [%s] (Pac:%d, Pas:%d, Head:%d, Stam:%d, Sho:%d, Def:%d, Sav:%d)",
+                name, position, pace, passing, heading, stamina, shoot, defense, saving);
+    }
 }
