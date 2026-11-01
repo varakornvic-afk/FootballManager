@@ -16,4 +16,9 @@ public class GoalKeeper extends Player {
     }
 
     public int getSaving() { return saving; }
+
+    /** ลด Stamina ลง 1 ทุกครั้งที่เซฟลูกยิงในเกมปกติสำเร็จ (ขั้นต่ำ 1) */
+    public void onSaveInGame() {
+        reduceStamina(1);
+    }
 }

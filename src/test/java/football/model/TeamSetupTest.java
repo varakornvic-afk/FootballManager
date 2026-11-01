@@ -48,20 +48,21 @@ class TeamSetupTest {
 
     @Test
     void createRejectsInvalidSquads() {
+        // 1. ตัวจริงไม่มี GK (ต้องโยน Exception)
         List<Player> noGk = lineup();
         noGk.set(0, outfield("X", CENTER_BACK));
         assertThrows(IllegalArgumentException.class, () -> setup(noGk, bench()));
 
+        // 2. ตัวจริงมี GK 2 คน (ต้องโยน Exception)
         List<Player> twoGk = lineup();
         twoGk.set(1, gk("GKX"));
         assertThrows(IllegalArgumentException.class, () -> setup(twoGk, bench()));
 
+        // 3. จำนวนสำรองไม่ครบ 5 คน (ต้องโยน Exception)
         assertThrows(IllegalArgumentException.class,
                 () -> setup(lineup(), new ArrayList<>(bench().subList(0, 4))));
 
-        List<Player> noGkBench = bench();
-        noGkBench.set(0, outfield("Y", MIDFIELD));
-        assertThrows(IllegalArgumentException.class, () -> setup(lineup(), noGkBench));
+        // [ปลดล็อก] ลบการเช็ก noGkBench ออก เพื่อให้เลือกลูกทีมสำรองได้อย่างอิสระตามกฎใหม่
     }
 
     @Test

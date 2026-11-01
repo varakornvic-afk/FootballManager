@@ -68,12 +68,6 @@ public final class TeamSetup {
 
     // ---------- การจัดคนลงช่อง ----------
 
-    /**
-     - 1) GK ลงช่อง GK  2) โหมดอุด/บุกหมด: เลือกตัวยืนเดี่ยว (ดูค่า shoot/defense คูณโทษตำแหน่ง)
-
-     - 3) จับคู่ตำแหน่งตรงก่อน  4) ที่เหลือลงช่องที่ระยะห่างน้อยสุด (เสมอกันใช้ลำดับในรายชื่อ)
-
-     */
     private Map<Player, Position> assign() {
         SlotLayout layout = stance.apply(formation.getSlots());
         Map<Position, Integer> free = new EnumMap<>(Position.class);
@@ -145,7 +139,7 @@ public final class TeamSetup {
         free.merge(slot, -1, Integer::sum);
     }
 
-    // ---------- ค่าที่ใช้คำนวณ (ตัวตั้งต้น ไว้จูนทีหลัง) ----------
+    // ---------- ค่าที่ใช้คำนวณ ----------
 
     /** ตัวคูณสถิติตามระยะห่างจากตำแหน่งจริง */
     public static double positionFactor(int distance) {
@@ -223,7 +217,6 @@ public final class TeamSetup {
         if (!bench.contains(in)) {
             throw new IllegalArgumentException("incoming player is not on the bench");
         }
-        // หมายเหตุ: ตรงนี้ยังบล็อกเรื่องเปลี่ยนตัวโกลกับผู้เล่นสนาม หากต้องการปลดล็อคการเปลี่ยนตัวด้วย สามารถปรับแก้เงื่อนไขตรงนี้เพิ่มเติมได้ครับ
         if ((out.getPosition() == Position.GK) != (in.getPosition() == Position.GK)) {
             throw new IllegalArgumentException("goalkeeper can only be swapped with a goalkeeper");
         }

@@ -50,7 +50,9 @@ public class PlayerRepository {
                 int defense = Integer.parseInt(parts[7].trim());
 
                 if (position == Position.GK) {
-                    int saving = parts.length > 8 ? Integer.parseInt(parts[8].trim()) : 5;
+                    int saving = (parts.length >= 9 && !parts[8].trim().isEmpty())
+                            ? Integer.parseInt(parts[8].trim())
+                            : 0;
                     players.add(new GoalKeeper(name, pace, passing, heading, stamina, shoot, defense, saving));
                 } else {
                     players.add(new Player(name, position, pace, passing, heading, stamina, shoot, defense));

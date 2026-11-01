@@ -2,7 +2,7 @@ package football.model;
 
 public class MatchEvent {
     public enum EventType {
-        GOAL, YELLOW_CARD, RED_CARD, FOUL, PENALTY, SUBSTITUTION
+        GOAL, YELLOW_CARD, RED_CARD, FOUL, PENALTY, NONE, SUBSTITUTION
     }
 
     private final int minute;

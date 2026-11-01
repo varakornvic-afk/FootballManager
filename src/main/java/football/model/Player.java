@@ -10,10 +10,10 @@ public class Player {
     private final int pace;
     private final int passing;
     private final int heading;
-    private final int stamina;
+    protected int stamina;
     private final int shoot;
     private final int defense;
-    private int saving;
+    private final int saving;
 
     /** ผู้เล่นสนาม: 6 ค่ารวม 24 (ห้ามใช้ตำแหน่ง GK ให้ใช้ GoalKeeper) */
     public Player(String name, Position position, int pace, int passing,
@@ -49,6 +49,7 @@ public class Player {
         this.stamina = stamina;
         this.shoot = shoot;
         this.defense = defense;
+        this.saving = extraPoints;
     }
 
     private static Position requireOutfield(Position position) {
@@ -73,11 +74,16 @@ public class Player {
     public int getStamina() { return stamina; }
     public int getShoot() { return shoot; }
     public int getDefense() { return defense; }
-    public int getSaving() {return saving;}
+    public int getSaving() { return saving; }
 
     @Override
     public String toString() {
         return String.format("%s [%s] (Pac:%d, Pas:%d, Head:%d, Stam:%d, Sho:%d, Def:%d, Sav:%d)",
                 name, position, pace, passing, heading, stamina, shoot, defense, saving);
+    }
+
+    /** ⚡ ลด Stamina ตามจำนวนที่ระบุ โดยไม่ให้ต่ำกว่า 0 */
+    public void reduceStamina(int amount) {
+        this.stamina = Math.max(0, this.stamina - amount);
     }
 }

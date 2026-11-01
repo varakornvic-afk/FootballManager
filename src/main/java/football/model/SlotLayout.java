@@ -36,7 +36,11 @@ public final class SlotLayout {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof SlotLayout other && counts.equals(other.counts);
+        if (o instanceof SlotLayout) {
+            SlotLayout other = (SlotLayout) o;
+            return counts.equals(other.counts);
+        }
+        return false;
     }
 
     @Override

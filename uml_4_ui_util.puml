@@ -1,0 +1,68 @@
+@startuml
+class football.util.PlayerRepository {
++ {static} List<Player> loadPlayersFromCSV(String)
+}
+
+class football.Main {
++ {static} void main(String[])
+}
+
+class football.ui.MainFrame {
+- JPanel cardPanel
+- CardLayout cardLayout
+- JPanel mainMenuPanel
+- JPanel modeSelectPanel
+- JPanel squadPanel
+- JPanel matchPanel
+- JTextArea matchLogArea
+- JComboBox<String> tacticComboBox
+- JComboBox<String> formationComboBox
+- boolean isHotseatMode
+- boolean isAwayDrafting
+- List<Player> poolPlayersHome
+- List<Player> poolPlayersAway
+- DefaultListModel<Player> poolListModel
+- DefaultListModel<Player> starterListModel
+- DefaultListModel<Player> benchListModel
+- JList<Player> poolJList
+- JList<Player> starterJList
+- JList<Player> benchJList
+- JLabel statusCountLabel
+- JLabel draftTitleLabel
+- List<Player> homeStartersDraft
+- List<Player> awayStartersDraft
+- Tactic homeTactic
+- Formation homeFormation
+- TeamSetup homeTeamSetup
+- TeamSetup awayTeamSetup
+- Match currentMatch
+- Timer liveTimer
+- int currentEventIndex
+- boolean isSecondHalfRunning
+- List<MatchEvent> h1Events
+- List<MatchEvent> h2Events
+- int liveHomeGoals
+- int liveAwayGoals
++ <<Create>> MainFrame()
+- void initMainMenu()
+- void initModeSelectMenu()
+- void startNewDraftSession()
+- void loadPoolToList(List<Player>)
+- void initSquadScreen()
+- JPanel createWrappedListPanel(String,JList<Player>)
+- void updateCounts()
+- void initMatchScreen()
+- void runMatchSimulation()
+- void processAndCheckPenaltyEvent(MatchEvent)
+- void openSubstitutionDialog()
+- void runTeamSubstitutionProcess(String,boolean)
+- void runPenaltyShootout()
+- String getRandomScorer(String)
+- void showLineupPopup(String,TeamSetup)
+}
+
+
+
+
+football.ui.JFrame <|-- football.ui.MainFrame
+@enduml

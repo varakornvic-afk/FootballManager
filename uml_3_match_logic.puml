@@ -1,0 +1,118 @@
+@startuml
+class football.logic.MatchRules {
++ {static} double TACTIC_ADVANTAGE
++ {static} double BASE_PENALTY
++ {static} double MIN_MODIFIER
++ {static} double MAX_MODIFIER
+- <<Create>> MatchRules()
++ {static} double tacticModifier(Tactic,Tactic,Formation)
++ {static} double totalModifier(Tactic,Tactic,Formation)
+}
+
+
+class football.model.MatchEvent {
+- int minute
+- EventType type
+- String teamName
+- Player player
+- String description
++ <<Create>> MatchEvent(int,EventType,String,Player,String)
++ int getMinute()
++ EventType getType()
++ String getTeamName()
++ Player getPlayer()
++ String getDescription()
+}
+
+
+enum football.model.EventType {
++  GOAL
++  YELLOW_CARD
++  RED_CARD
++  FOUL
++  PENALTY
++  SUBSTITUTION
+}
+
+class football.model.TeamSetup {
++ {static} int LINEUP_SIZE
++ {static} int BENCH_SIZE
++ {static} int MAX_SUBSTITUTIONS
+- {static} double FATIGUE_RATE
+- {static} double FIT_RANGE
+- {static} double BASE_AVERAGE
+- Tactic tactic
+- Formation formation
+- Stance stance
+- List<Player> starters
+- List<Player> bench
+- int substitutionsUsed
+- Set<Player> tired
+- Map<Player,Position> assignment
+- <<Create>> TeamSetup(Tactic,Formation,Stance,List<Player>,List<Player>,int,Set<Player>)
++ {static} TeamSetup create(Tactic,Formation,Stance,List<Player>,List<Player>)
+- Map<Player,Position> assign()
+- {static} Player best(List<Player>,Position,ToIntFunction<Player>)
+- {static} Position closestFreeSlot(Player,Map<Position,Integer>)
+- {static} void place(Map<Player,Position>,Map<Position,Integer>,Player,Position)
++ {static} double positionFactor(int)
++ {static} double fatigueFactor(int)
++ Position assignedPosition(Player)
++ double effectiveValue(Player,int)
++ double averageFit()
++ double fitMultiplier()
++ TeamSetup withFormation(Formation)
++ TeamSetup withStance(Stance)
++ TeamSetup endFirstHalf()
++ TeamSetup withSubstitution(Player,Player)
++ Tactic getTactic()
++ Formation getFormation()
++ Stance getStance()
++ List<Player> getStarters()
++ List<Player> getBench()
++ int getSubstitutionsUsed()
++ int getRemainingSubstitutions()
+}
+
+
+class football.logic.MatchEngine {
+- Random random
++ <<Create>> MatchEngine(long)
++ <<Create>> MatchEngine(Random)
++ PeriodResult simulatePeriod(int,int,int,TeamSetup,TeamSetup)
+- boolean tryAttack(TeamSetup,TeamSetup,int,String,List<MatchEvent>)
+}
+
+
+class football.logic.Match {
+- TeamSetup homeTeam
+- TeamSetup awayTeam
+- MatchEngine engine
+- List<PeriodResult> allResults
+- boolean firstHalfPlayed
+- boolean secondHalfPlayed
++ <<Create>> Match(TeamSetup,TeamSetup,long)
++ PeriodResult playFirstHalf()
++ PeriodResult playSecondHalf()
++ TeamSetup getHomeTeam()
++ TeamSetup getAwayTeam()
++ List<PeriodResult> getAllResults()
++ int getTotalHomeGoals()
++ int getTotalAwayGoals()
+}
+
+
+class football.model.PeriodResult {
+- int periodNumber
+- int homeGoals
+- int awayGoals
+- List<MatchEvent> events
++ <<Create>> PeriodResult(int,int,int,List<MatchEvent>)
++ int getPeriodNumber()
++ int getHomeGoals()
++ int getAwayGoals()
++ List<MatchEvent> getEvents()
+}
+
+
+@enduml
