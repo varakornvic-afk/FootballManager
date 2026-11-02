@@ -7,7 +7,9 @@ public class Formation532 extends Formation {
 
     @Override
     public double fitFor(Tactic tactic) {
-        return tactic instanceof CounterAttack ? SPECIALIST_FIT : OFF_PLAN_FIT;
+        if (tactic instanceof CounterAttack) return SPECIALIST_FIT;
+        if (tactic instanceof WidePlay) return POOR_FIT; // ไม่มีช่องปีก (MW) เลย ขัดกับเกมริมเส้นมากกว่าแผนอื่น
+        return OFF_PLAN_FIT;
     }
 
     @Override

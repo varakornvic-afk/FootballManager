@@ -73,8 +73,23 @@ class PlayerTest {
     void fitScoreReadsMatchingStat() {
         Player p = new Player("A", Position.MIDFIELD, 9, 3, 2, 4, 3, 3);
         assertEquals(9, new CounterAttack().fitScore(p));
-        assertEquals(3, new Possession().fitScore(p));
+        assertEquals(3 + 3 / 2, new Possession().fitScore(p)); // MIDFIELD ได้ Passing เพิ่มครึ่งหนึ่ง
         assertEquals(2, new WidePlay().fitScore(p));
+    }
+
+    @Test
+    void positionBonusesApplyOnlyToTheirOwnPositions() {
+        Player striker = new Player("S", Position.STRIKER, 8, 3, 3, 3, 4, 3);
+        Player centreBack = new Player("C", Position.CENTER_BACK, 8, 3, 3, 3, 4, 3);
+        assertEquals(8 + 8 / 2, new CounterAttack().fitScore(striker));   // ST เร็วได้โบนัส
+        assertEquals(8, new CounterAttack().fitScore(centreBack));        // ตำแหน่งอื่นไม่ได้
+
+        Player winger = new Player("W", Position.MIDWING, 4, 6, 2, 4, 4, 4);
+        Player midfielder = new Player("M", Position.MIDFIELD, 4, 6, 2, 4, 4, 4);
+        assertEquals(2 + 6, new WidePlay().fitScore(winger));             // MW ได้ Passing บวกเพิ่ม
+        assertEquals(2, new WidePlay().fitScore(midfielder));
+        assertEquals(6 + 6 / 2, new Possession().fitScore(midfielder));   // MF ได้โบนัส Possession
+        assertEquals(6, new Possession().fitScore(winger));
     }
 
     @Test

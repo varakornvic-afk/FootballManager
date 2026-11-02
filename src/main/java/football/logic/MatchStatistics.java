@@ -1,6 +1,6 @@
 package football.logic;
 
-import football.model.MatchEvent;
+import football.event.MatchEvent;
 import java.util.List;
 
 public class MatchStatistics {
@@ -17,6 +17,10 @@ public class MatchStatistics {
 
     public static MatchStatistics calculate(List<MatchEvent> events) {
         MatchStatistics stats = new MatchStatistics();
+        if (events == null || events.isEmpty()) {
+            return stats;
+        }
+
         int homeAttacks = 0;
         int awayAttacks = 0;
 
@@ -24,17 +28,29 @@ public class MatchStatistics {
             String team = ev.getTeamName() != null ? ev.getTeamName() : "";
             boolean isHome = team.equalsIgnoreCase("Home");
             String desc = ev.getDescription() != null ? ev.getDescription() : "";
+            MatchEvent.EventType type = ev.getEventType();
 
-            // นับโอกาสบุก/ครองบอล
-            if (desc.contains("creates a clear scoring chance") || desc.contains("builds up an attack")) {
-                if (isHome) homeAttacks++; else awayAttacks++;
+            // 1. นับโอกาสบุกและจำนวนการยิงทั้งหมด
+            if (type == MatchEvent.EventType.GOAL ||
+                    type == MatchEvent.EventType.SAVE ||
+                    type == MatchEvent.EventType.PENALTY ||
+                    desc.contains("creates a clear scoring chance") ||
+                    desc.contains("builds up an attack")) {
+
+                if (isHome) {
+                    homeAttacks++;
+                    stats.homeShots++;
+                } else {
+                    awayAttacks++;
+                    stats.awayShots++;
+                }
             }
 
-            // นับจำนวนการสับไกยิงและยิงเข้ากรอบ
-            if (desc.contains("creates a clear scoring chance")) {
-                if (isHome) stats.homeShots++; else stats.awayShots++;
-            }
-            if (desc.contains("GOAL!") || desc.contains("saved brilliant") || desc.contains("Penalty goal")) {
+            // 2. นับการยิงเข้ากรอบ (Goals, Saves, Penalties)
+            if (type == MatchEvent.EventType.GOAL ||
+                    type == MatchEvent.EventType.SAVE ||
+                    type == MatchEvent.EventType.PENALTY) {
+
                 if (isHome) {
                     stats.homeShotsOnTarget++;
                 } else {
@@ -42,19 +58,19 @@ public class MatchStatistics {
                 }
             }
 
-            // นับใบเตือนและใบแดง
-            if (ev.getType() == MatchEvent.EventType.YELLOW_CARD) {
+            // 3. นับใบเหลือง และ ใบแดง
+            if (type == MatchEvent.EventType.YELLOW_CARD) {
                 if (isHome) stats.homeYellowCards++; else stats.awayYellowCards++;
-            } else if (ev.getType() == MatchEvent.EventType.RED_CARD) {
+            } else if (type == MatchEvent.EventType.RED_CARD) {
                 if (isHome) stats.homeRedCards++; else stats.awayRedCards++;
             }
         }
 
-        // คำนวณ % การครองบอลอัตโนมัติ
+        // 4. คำนวณ % การครองบอลอัตโนมัติ
         int totalAttacks = homeAttacks + awayAttacks;
         if (totalAttacks > 0) {
             stats.homePossessionPercent = (int) Math.round(((double) homeAttacks / totalAttacks) * 100);
-            stats.awayPossessionPercent = 100 - stats.homePossessionPercent;
+            stats.awayPossessionPercent = 100 - stats.homePossessionPercent; // 📌 แก้ไข Syntax Error
         }
 
         return stats;

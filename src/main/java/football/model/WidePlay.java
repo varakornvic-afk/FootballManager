@@ -10,6 +10,11 @@ public class WidePlay implements Tactic {
     @Override
     public boolean beats(Tactic other) { return other instanceof CounterAttack; }
 
+    /** เน้นลูกโหม่ง และปีก (MIDWING) ที่จ่ายเก่งเหมาะกับเกมริมเส้นเป็นพิเศษ (ได้โบนัสค่า Passing) */
     @Override
-    public int fitScore(Player p) { return p.getHeading(); }
+    public int fitScore(Player p) {
+        int score = p.getHeading();
+        if (p.getPosition() == Position.MIDWING) score += p.getPassing();
+        return score;
+    }
 }

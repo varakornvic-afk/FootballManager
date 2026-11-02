@@ -11,6 +11,7 @@ public class Player {
     private final int passing;
     private final int heading;
     protected int stamina;
+    protected final int maxStamina;
     private final int shoot;
     private final int defense;
     private final int saving;
@@ -47,6 +48,7 @@ public class Player {
         this.passing = passing;
         this.heading = heading;
         this.stamina = stamina;
+        this.maxStamina = stamina;
         this.shoot = shoot;
         this.defense = defense;
         this.saving = extraPoints;
@@ -72,18 +74,45 @@ public class Player {
     public int getPassing() { return passing; }
     public int getHeading() { return heading; }
     public int getStamina() { return stamina; }
+    public int getMaxStamina() { return maxStamina; }
     public int getShoot() { return shoot; }
     public int getDefense() { return defense; }
     public int getSaving() { return saving; }
 
+    public String getStaminaStatusIcon() {
+        if (this instanceof GoalKeeper) {
+            if (stamina >= maxStamina) return "🟢";
+            if (stamina > 1) return "🟡";
+            return "🟥";
+        } else {
+            if (stamina >= maxStamina) return "🟢";
+            if (stamina > 2) return "🟡";
+            return "🟥";
+        }
+    }
+
     @Override
     public String toString() {
-        return String.format("%s [%s] (Pac:%d, Pas:%d, Head:%d, Stam:%d, Sho:%d, Def:%d, Sav:%d)",
-                name, position, pace, passing, heading, stamina, shoot, defense, saving);
+        boolean isGK = position.toString().equals("GK");
+
+        if (isGK) {
+            return String.format("[%s] %s (Stam:%d) - Pac:%d | Pas:%d | Head:%d | Def:%d | Sav:%d",
+                    position, name, stamina, pace, passing, heading, defense, saving);
+        } else {
+            return String.format("[%s] %s (Stam:%d) - Pac:%d | Pas:%d | Head:%d | Sho:%d | Def:%d",
+                    position, name, stamina, pace, passing, heading, shoot, defense);
+        }
     }
 
     /** ⚡ ลด Stamina ตามจำนวนที่ระบุ โดยไม่ให้ต่ำกว่า 0 */
     public void reduceStamina(int amount) {
-        this.stamina = Math.max(0, this.stamina - amount);
+        if (this instanceof GoalKeeper) {
+            return;
+        }
+        this.stamina = Math.max(0, this.stamina - amount); // 📌 แก้ไข Syntax Error ใส่เครื่องหมายลบ -
+    }
+
+    public void setStamina(int stamina) {
+        this.stamina = Math.max(0, Math.min(maxStamina, stamina));
     }
 }

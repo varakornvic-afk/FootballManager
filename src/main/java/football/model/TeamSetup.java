@@ -29,14 +29,28 @@ public final class TeamSetup {
     private final Set<Player> tired;
     private final Map<Player, Position> assignment;
 
-    public static TeamSetup create(Tactic tactic, Formation formation, Stance stance,
-                                   List<Player> starters, List<Player> bench) {
-        Objects.requireNonNull(bench, "bench");
-        if (bench.size() != BENCH_SIZE) {
-            throw new IllegalArgumentException("bench must have " + BENCH_SIZE + " players");
+    // ในไฟล์ football/model/TeamSetup.java
+
+    public static TeamSetup create(Tactic tactic, Formation formation, Stance stance, List<Player> starters, List<Player> bench) {
+        if (tactic == null || formation == null || stance == null || starters == null || bench == null) {
+            throw new IllegalArgumentException("Arguments cannot be null");
         }
-        // [ปลดล็อค] เอาการเช็ค GK สำรองออก เพื่อให้เลือกตัวสำรองได้อย่างอิสระ
-        return new TeamSetup(tactic, formation, stance, starters, bench, 0, Set.of());
+        if (starters.size() != 11) {
+            throw new IllegalArgumentException("Starters must contain exactly 11 players");
+        }
+        if (bench.size() != 5) {
+            throw new IllegalArgumentException("Bench must contain exactly 5 players");
+        }
+
+        // 📌 เช็กว่าตัวจริงต้องมีผู้รักษาประตู (GK) เพียง 1 คนเท่านั้น
+        long gkCount = starters.stream()
+                .filter(p -> p.getPosition() == Position.GK || p instanceof GoalKeeper)
+                .count();
+        if (gkCount != 1) {
+            throw new IllegalArgumentException("Starters must contain exactly 1 Goalkeeper");
+        }
+
+        return new TeamSetup(tactic, formation, stance, starters, bench, 0, new java.util.HashSet<>());
     }
 
     private TeamSetup(Tactic tactic, Formation formation, Stance stance,
@@ -47,8 +61,10 @@ public final class TeamSetup {
         this.stance = Objects.requireNonNull(stance, "stance");
         Objects.requireNonNull(starters, "starters");
         Objects.requireNonNull(bench, "bench");
-        if (starters.size() != LINEUP_SIZE) {
-            throw new IllegalArgumentException("lineup must have " + LINEUP_SIZE + " players");
+
+        // แก้ไขเงื่อนไขตรงนี้ให้รองรับใบแดง (starters > LINEUP_SIZE แทน !=)
+        if (starters.size() > LINEUP_SIZE) {
+            throw new IllegalArgumentException("lineup cannot exceed " + LINEUP_SIZE + " players");
         }
         long keepers = starters.stream().filter(p -> p.getPosition() == Position.GK).count();
         if (keepers != 1) {
@@ -153,7 +169,7 @@ public final class TeamSetup {
 
     /** ตัวคูณความล้าหลังพักครึ่ง: ยิ่ง stamina ต่ำยิ่งล้ามาก */
     public static double fatigueFactor(int stamina) {
-        return 1.0 - (FATIGUE_RATE / stamina);
+        return 1.0 - (FATIGUE_RATE / Math.max(1, stamina)); // ป้องกันหาร 0 ถ้า stamina เป็น 0
     }
 
     public Position assignedPosition(Player player) {
@@ -173,13 +189,14 @@ public final class TeamSetup {
         return value;
     }
 
-    /** ค่าเฉลี่ย fitScore ของแทคติก (หลังหักโทษ/ความล้า) ของ 11 คน */
+    /** ค่าเฉลี่ย fitScore ของแทคติก (หลังหักโทษ/ความล้า) ของคนที่มีอยู่ในสนาม */
     public double averageFit() {
         double sum = 0;
         for (Player p : starters) {
             sum += effectiveValue(p, tactic.fitScore(p));
         }
-        return sum / starters.size();
+        // ป้องกันการหารด้วย 0 กรณียังไม่มีตัวจริง หรือโดนไล่ออกหมด
+        return starters.isEmpty() ? 0 : sum / starters.size();
     }
 
     /** ตัวคูณจากความเหมาะสมของนักเตะ ช่วง 0.9-1.1 (เฉลี่ย 4 = 1.0) */
@@ -202,8 +219,12 @@ public final class TeamSetup {
 
     /** เรียกตอนจบครึ่งแรก (ก่อนเปลี่ยนตัว): ทุกคนที่ลงอยู่ถูกนับว่าล้า */
     public TeamSetup endFirstHalf() {
-        return new TeamSetup(tactic, formation, stance, starters, bench,
-                substitutionsUsed, new HashSet<>(starters));
+        for (Player p : starters) {
+            if (p.getPosition() != Position.GK && Math.random() < 0.15) {
+                p.setStamina(Math.max(0, p.getStamina() - 1));
+            }
+        }
+        return this;
     }
 
     public TeamSetup withSubstitution(Player out, Player in) {
@@ -228,6 +249,23 @@ public final class TeamSetup {
         newTired.remove(out);
         return new TeamSetup(tactic, formation, stance, newStarters, newBench,
                 substitutionsUsed + 1, newTired);
+    }
+    /** เอาผู้เล่นออกจากสนามโดยไม่มีตัวแทน (ใบแดง) */
+    public TeamSetup withoutPlayer(Player sentOff) {
+        if (!starters.contains(sentOff)) throw new IllegalArgumentException("player is not on the pitch");
+        if (sentOff.getPosition() == Position.GK) throw new IllegalArgumentException("goalkeeper cannot be removed this way");
+        List<Player> newStarters = new ArrayList<>(starters);
+        newStarters.remove(sentOff);
+        Set<Player> newTired = new HashSet<>(tired);
+        newTired.remove(sentOff);
+        return new TeamSetup(tactic, formation, stance, newStarters, bench, substitutionsUsed, newTired);
+    }
+
+    /** สร้างทีมใหม่จากตัวจริง/สำรองที่ปรับแล้ว (รองรับตัวจริงน้อยกว่า 11 หลังโดนใบแดง) */
+    public TeamSetup withLineup(Formation newFormation, Stance newStance,
+                                List<Player> newStarters, List<Player> newBench) {
+        return new TeamSetup(tactic, newFormation, newStance, newStarters, newBench,
+                substitutionsUsed, tired);
     }
 
     public Tactic getTactic() { return tactic; }

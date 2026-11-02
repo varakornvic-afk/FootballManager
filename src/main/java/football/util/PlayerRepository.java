@@ -35,27 +35,32 @@ public class PlayerRepository {
                     continue;
                 }
 
-                if (line.isBlank()) continue;
+                if (line == null || line.isBlank() || line.trim().startsWith("#")) continue;
 
                 String[] parts = line.split(",");
                 if (parts.length < 8) continue;
 
-                String name = parts[0].trim();
-                Position position = Position.valueOf(parts[1].trim());
-                int pace = Integer.parseInt(parts[2].trim());
-                int passing = Integer.parseInt(parts[3].trim());
-                int heading = Integer.parseInt(parts[4].trim());
-                int stamina = Integer.parseInt(parts[5].trim());
-                int shoot = Integer.parseInt(parts[6].trim());
-                int defense = Integer.parseInt(parts[7].trim());
+                try {
+                    String name = parts[0].trim();
+                    Position position = Position.valueOf(parts[1].trim().toUpperCase());
+                    int pace = Integer.parseInt(parts[2].trim());
+                    int passing = Integer.parseInt(parts[3].trim());
+                    int heading = Integer.parseInt(parts[4].trim());
+                    int stamina = Integer.parseInt(parts[5].trim());
+                    int shoot = Integer.parseInt(parts[6].trim());
+                    int defense = Integer.parseInt(parts[7].trim());
 
-                if (position == Position.GK) {
-                    int saving = (parts.length >= 9 && !parts[8].trim().isEmpty())
-                            ? Integer.parseInt(parts[8].trim())
-                            : 0;
-                    players.add(new GoalKeeper(name, pace, passing, heading, stamina, shoot, defense, saving));
-                } else {
-                    players.add(new Player(name, position, pace, passing, heading, stamina, shoot, defense));
+                    if (position == Position.GK) {
+                        int saving = (parts.length >= 9 && !parts[8].trim().isEmpty())
+                                ? Integer.parseInt(parts[8].trim())
+                                : 0;
+                        players.add(new GoalKeeper(name, pace, passing, heading, stamina, shoot, defense, saving));
+                    } else {
+                        players.add(new Player(name, position, pace, passing, heading, stamina, shoot, defense));
+                    }
+                } catch (IllegalArgumentException e) {
+                    // 📌 ป้องกันกรณีข้อมูลแถวใดแถวหนึ่งผิดพลาด (เช่น Enum ไม่ตรง หรือ สถิติบวกรวมกันไม่ได้ 24)
+                    System.err.println("Skipping invalid player row in CSV [" + line + "]: " + e.getMessage());
                 }
             }
         } catch (IOException e) {

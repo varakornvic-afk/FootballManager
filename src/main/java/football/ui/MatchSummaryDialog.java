@@ -30,14 +30,23 @@ public class MatchSummaryDialog extends JDialog {
         add(headerPanel, BorderLayout.NORTH);
 
         // 2. Stats Comparison Table Panel
-        JPanel statsPanel = new JPanel(new GridLayout(6, 3, 10, 8));
+        JPanel statsPanel = new JPanel(new GridLayout(5, 3, 10, 8)); // 📌 แก้ไขจาก (6, 3) เป็น (5, 3) ให้พอดีกับ 5 แถว
         statsPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
 
-        addStatRow(statsPanel, String.valueOf(stats.getHomePossessionPercent()) + "%", "Possession", String.valueOf(stats.getAwayPossessionPercent()) + "%");
-        addStatRow(statsPanel, String.valueOf(stats.getHomeShots()), "Total Shots", String.valueOf(stats.getAwayShots()));
-        addStatRow(statsPanel, String.valueOf(stats.getHomeShotsOnTarget()), "Shots on Target", String.valueOf(stats.getAwayShotsOnTarget()));
-        addStatRow(statsPanel, String.valueOf(stats.getHomeYellowCards()), "Yellow Cards", String.valueOf(stats.getAwayYellowCards()));
-        addStatRow(statsPanel, String.valueOf(stats.getHomeRedCards()), "Red Cards", String.valueOf(stats.getAwayRedCards()));
+        // 📌 Null-Safety Check
+        if (stats != null) {
+            addStatRow(statsPanel, stats.getHomePossessionPercent() + "%", "Possession", stats.getAwayPossessionPercent() + "%");
+            addStatRow(statsPanel, String.valueOf(stats.getHomeShots()), "Total Shots", String.valueOf(stats.getAwayShots()));
+            addStatRow(statsPanel, String.valueOf(stats.getHomeShotsOnTarget()), "Shots on Target", String.valueOf(stats.getAwayShotsOnTarget()));
+            addStatRow(statsPanel, String.valueOf(stats.getHomeYellowCards()), "Yellow Cards", String.valueOf(stats.getAwayYellowCards()));
+            addStatRow(statsPanel, String.valueOf(stats.getHomeRedCards()), "Red Cards", String.valueOf(stats.getAwayRedCards()));
+        } else {
+            addStatRow(statsPanel, "50%", "Possession", "50%");
+            addStatRow(statsPanel, "0", "Total Shots", "0");
+            addStatRow(statsPanel, "0", "Shots on Target", "0");
+            addStatRow(statsPanel, "0", "Yellow Cards", "0");
+            addStatRow(statsPanel, "0", "Red Cards", "0");
+        }
 
         add(statsPanel, BorderLayout.CENTER);
 

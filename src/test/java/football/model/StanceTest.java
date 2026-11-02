@@ -60,15 +60,9 @@ class StanceTest {
     }
 
     @Test
-    void attackAndDefenseDeltasCancelOut() {
+    void everyStanceHasADisplayLabel() {
         for (Stance s : Stance.values()) {
-            assertEquals(0, s.getAttackDelta() + s.getDefenseDelta());
+            assertFalse(s.getLabel().isBlank());
         }
-    }
-
-    @Test
-    void exposureGrowsFromParkToAllOut() {
-        assertTrue(Stance.PARK_THE_BUS.getExposureFactor() < Stance.NORMAL.getExposureFactor());
-        assertTrue(Stance.NORMAL.getExposureFactor() < Stance.ALL_OUT_ATTACK.getExposureFactor());
     }
 }

@@ -3,6 +3,7 @@ package football.model;
 public abstract class Formation {
     protected static final double SPECIALIST_FIT = 1.15;  // ตรงแผนที่ฟอร์เมชันนี้ถนัด
     protected static final double OFF_PLAN_FIT = 0.95;    // ไม่ตรงแผน
+    protected static final double POOR_FIT = 0.90;        // ขัดกับแผนมาก (เช่น 5-3-2 ไม่มีปีกเลย แต่เล่น Wide Play)
     protected static final double VERSATILE_FIT = 1.05;   // ฟอร์เมชันยืดหยุ่น เท่ากันทุกแผน
 
     private final String name;

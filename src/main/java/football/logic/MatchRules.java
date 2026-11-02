@@ -14,7 +14,7 @@ public final class MatchRules {
     /** ผลของวงกลมแทคติก: ชนะได้โบนัสคงที่ แพ้เสียตาม exposure ของฟอร์เมชัน */
     public static double tacticModifier(Tactic mine, Tactic theirs, Formation formation) {
         if (mine.beats(theirs)) return TACTIC_ADVANTAGE;
-        if (theirs.beats(mine)) return 1.0 - BASE_PENALTY * formation.getExposure();
+        if (theirs.beats(mine)) return 1.0 - (BASE_PENALTY * formation.getExposure());
         return 1.0;
     }
 

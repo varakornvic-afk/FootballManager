@@ -10,6 +10,11 @@ public class Possession implements Tactic {
     @Override
     public boolean beats(Tactic other) { return other instanceof WidePlay; }
 
+    /** เน้นการจ่าย (Passing) และกองกลาง (MIDFIELD) ที่จ่ายเก่งเป็นหัวใจของเกมครองบอล (ได้โบนัสครึ่งหนึ่งของ Passing) */
     @Override
-    public int fitScore(Player p) { return p.getPassing(); }
+    public int fitScore(Player p) {
+        int score = p.getPassing();
+        if (p.getPosition() == Position.MIDFIELD) score += p.getPassing() / 2;
+        return score;
+    }
 }

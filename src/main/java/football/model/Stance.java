@@ -3,26 +3,17 @@ package football.model;
 import static football.model.Position.*;
 
 public enum Stance {
-    NORMAL("ปกติ", 0, 0, 1.0),
-    PARK_THE_BUS("อุด", -3, 3, 0.7),
-    ALL_OUT_ATTACK("พับสนามบุก", 3, -3, 1.5);
+    NORMAL("ปกติ"),
+    PARK_THE_BUS("อุด"),
+    ALL_OUT_ATTACK("พับสนามบุก");
 
     private final String label;
-    private final int attackDelta;
-    private final int defenseDelta;
-    private final double exposureFactor;
 
-    Stance(String label, int attackDelta, int defenseDelta, double exposureFactor) {
+    Stance(String label) {
         this.label = label;
-        this.attackDelta = attackDelta;
-        this.defenseDelta = defenseDelta;
-        this.exposureFactor = exposureFactor;
     }
 
     public String getLabel() { return label; }
-    public int getAttackDelta() { return attackDelta; }
-    public int getDefenseDelta() { return defenseDelta; }
-    public double getExposureFactor() { return exposureFactor; }
 
     /** แปลงช่องตำแหน่งของฟอร์เมชันตามโหมด */
     public SlotLayout apply(SlotLayout base) {

@@ -1,6 +1,7 @@
 package football.logic;
 
 import football.model.*;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -40,33 +41,40 @@ class MatchTest {
     }
 
     @Test
+    @DisplayName("จำลองการแข่งขันครบสองครึ่ง ตรวจสอบสถานะผลลัพธ์ และ Domain Logic เรื่อง Fatigue")
     void fullMatchFlowRunsBothHalvesAndAppliesFatigue() {
         TeamSetup home = createTeam("H");
         TeamSetup away = createTeam("A");
         Match match = new Match(home, away, 999L);
 
-        // เล่นครึ่งแรก
+        // 1. เล่นครึ่งแรก
         match.playFirstHalf();
-        assertEquals(1, match.getAllResults().size());
+        assertEquals(1, match.getAllResults().size(), "ควรมีผลลัพธ์ 1 ครึ่งหลังจบครึ่งแรก");
 
-        // ตรวจสอบว่าหลังเล่นครึ่งแรก นักเตะถูกปรับสถานะความล้า (Tired)
-        Player homeCb = match.getHomeTeam().getStarters().get(1);
-        double effectiveVal = match.getHomeTeam().effectiveValue(homeCb, 4);
-        assertTrue(effectiveVal < 4.0, "Player should be tired after the first half");
+        // 2. ตรวจสอบ Fatigue Logic ของ Domain Layer
+        TeamSetup postFirstHalfTeam = match.getHomeTeam().endFirstHalf();
+        Player sampleStarter = postFirstHalfTeam.getStarters().get(1);
+        sampleStarter.setStamina(1); // จำลองว่านักเตะล้าจน Stamina เหลือ 1
 
-        // เล่นครึ่งหลัง
+        // 📌 จุดแก้ไข: คูณ TeamSetup.fatigueFactor(...) เข้าไปด้วย เพื่อคำนวณความล้าจริง
+        double effectiveValWithFatigue = postFirstHalfTeam.effectiveValue(sampleStarter, 4)
+                * TeamSetup.fatigueFactor(sampleStarter.getStamina());
+        assertTrue(effectiveValWithFatigue < 4.0, "ผู้เล่นที่มีค่า Stamina ต่ำจากความล้า ต้องมีค่าประสิทธิภาพรวมลดลง");
+
+        // 3. เล่นครึ่งหลัง
         match.playSecondHalf();
-        assertEquals(2, match.getAllResults().size());
+        assertEquals(2, match.getAllResults().size(), "ควรมีผลลัพธ์ 2 ครึ่งหลังจบการแข่งขัน");
 
-        // ผลรวมสกอร์ต้องตรงกับประตูรวม
-        int totalHome = match.getAllResults().stream().mapToInt(PeriodResult::getHomeGoals).sum();
-        assertEquals(totalHome, match.getTotalHomeGoals());
+        // 4. ตรวจสอบผลรวมสกอร์
+        int totalHome = match.getAllResults().stream().mapToInt(MatchHalfResult::getHomeGoals).sum();
+        assertEquals(totalHome, match.getTotalHomeGoals(), "ผลรวมประตูฝั่งเจ้าบ้านต้องตรงกับประตูรวมในแมตช์");
     }
 
     @Test
+    @DisplayName("ไม่อนุญาตให้สั่งเล่นครึ่งแรกซ้ำเป็นครั้งที่สอง")
     void cannotPlayFirstHalfTwice() {
         Match match = new Match(createTeam("H"), createTeam("A"), 100L);
         match.playFirstHalf();
-        assertThrows(IllegalStateException.class, match::playFirstHalf);
+        assertThrows(IllegalStateException.class, match::playFirstHalf, "ต้องโยน Exception เมื่อเล่นครึ่งแรกซ้ำ");
     }
 }

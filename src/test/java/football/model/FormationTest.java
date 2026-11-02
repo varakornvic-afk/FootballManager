@@ -34,6 +34,13 @@ class FormationTest {
     }
 
     @Test
+    void fiveThreeTwoFitsWidePlayWorstOfAll() {
+        Formation f = new Formation532();
+        assertEquals(0.90, f.fitFor(new WidePlay()), DELTA);
+        assertTrue(f.fitFor(new WidePlay()) < f.fitFor(new Possession()));
+    }
+
+    @Test
     void versatileFormationFitsEveryTacticTheSame() {
         Formation f = new Formation442();
         assertEquals(1.05, f.fitFor(new CounterAttack()), DELTA);

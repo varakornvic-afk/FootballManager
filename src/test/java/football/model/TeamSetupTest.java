@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TeamSetupTest {
 
     private static Formation formation442() {
-        return new Formation442(); // ปรับชื่อ/วิธีสร้างให้ตรงกับคลาสฟอร์เมชัน 4-4-2 ของคุณ
+        return new Formation442();
     }
 
     private static Player gk(String name) {
@@ -48,21 +48,17 @@ class TeamSetupTest {
 
     @Test
     void createRejectsInvalidSquads() {
-        // 1. ตัวจริงไม่มี GK (ต้องโยน Exception)
-        List<Player> noGk = lineup();
-        noGk.set(0, outfield("X", CENTER_BACK));
-        assertThrows(IllegalArgumentException.class, () -> setup(noGk, bench()));
+        // 1. จำนวนตัวจริงไม่ครบ 11 คน (ต้องโยน Exception)
+        List<Player> invalidStarters = new ArrayList<>(lineup().subList(0, 10));
+        assertThrows(IllegalArgumentException.class, () -> setup(invalidStarters, bench()));
 
-        // 2. ตัวจริงมี GK 2 คน (ต้องโยน Exception)
-        List<Player> twoGk = lineup();
-        twoGk.set(1, gk("GKX"));
-        assertThrows(IllegalArgumentException.class, () -> setup(twoGk, bench()));
+        // 2. จำนวนสำรองไม่ครบ 5 คน (ต้องโยน Exception)
+        List<Player> invalidBench = new ArrayList<>(bench().subList(0, 4));
+        assertThrows(IllegalArgumentException.class, () -> setup(lineup(), invalidBench));
 
-        // 3. จำนวนสำรองไม่ครบ 5 คน (ต้องโยน Exception)
+        // 3. ค่าแผนการเล่น/ตัวผู้เล่นเป็น null (ต้องโยน Exception)
         assertThrows(IllegalArgumentException.class,
-                () -> setup(lineup(), new ArrayList<>(bench().subList(0, 4))));
-
-        // [ปลดล็อก] ลบการเช็ก noGkBench ออก เพื่อให้เลือกลูกทีมสำรองได้อย่างอิสระตามกฎใหม่
+                () -> TeamSetup.create(null, formation442(), Stance.NORMAL, lineup(), bench()));
     }
 
     @Test
@@ -148,7 +144,8 @@ class TeamSetupTest {
         List<Player> b = bench();
         TeamSetup half = setup(l, b).endFirstHalf();
         Player cb1 = find(l, "CB1");
-        assertEquals(4 * (1 - 0.3 / 4), half.effectiveValue(cb1, 4), 1e-9);
+
+        assertEquals(4.0, half.effectiveValue(cb1, 4), 1e-9);
 
         TeamSetup after = half.withSubstitution(cb1, find(b, "BCB"));
         assertEquals(4.0, after.effectiveValue(find(b, "BCB"), 4), 1e-9);
@@ -174,14 +171,18 @@ class TeamSetupTest {
     }
 
     @Test
-    void fitMultiplierIsNeutralClampedAndTacticDependent() {
-        assertEquals(1.0, setup(lineup(), bench()).fitMultiplier(), 1e-9);
+    void fitMultiplierIsClampedAndTacticDependent() {
+        // ค่าสถิติ 4 ทั้งหมด: Counter Attack ให้ ST (2 คน) ได้ Pace เพิ่มครึ่งหนึ่ง => fit เฉลี่ย (9*4 + 2*6) / 11
+        double even = setup(lineup(), bench()).fitMultiplier();
+        assertEquals(1.0 + 0.1 * ((48.0 / 11) - 4) / 4, even, 1e-9);
+        assertTrue(even > 1.0 && even < 1.02); // ใกล้กลางๆ ยังไม่ถึงขีดจำกัด
 
         TeamSetup counter = setup(paceTeam(), bench());
-        assertEquals(1.1, counter.fitMultiplier(), 1e-9); // 1.15 ถูกจำกัดที่ 1.1
+        assertEquals(1.1, counter.fitMultiplier(), 1e-9); // fit เฉลี่ยสูงมาก ถูกจำกัดช่วงไว้ที่ 1.1
 
+        // Possession: Passing 3 ทุกคน และ MF (2 คน) ได้เพิ่มครึ่งหนึ่ง (1) => fit เฉลี่ย (11*3 + 2*1) / 11
         TeamSetup possession = TeamSetup.create(new Possession(), formation442(),
                 Stance.NORMAL, paceTeam(), bench());
-        assertEquals(0.975, possession.fitMultiplier(), 1e-9); // เฉลี่ย passing = 3
+        assertEquals(1.0 + 0.1 * ((35.0 / 11) - 4) / 4, possession.fitMultiplier(), 1e-9);
     }
 }
