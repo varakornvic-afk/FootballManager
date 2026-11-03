@@ -1,8 +1,12 @@
 package football.ui;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -11,16 +15,37 @@ import java.util.Map;
 /**
  * พาเนลที่วาดภาพพื้นหลังเต็มพื้นที่ (รักษาสัดส่วน) พร้อมแผ่นดำโปร่งใสทับให้ตัวหนังสืออ่านง่าย
  * สลับภาพได้ด้วย {@link #setImage(String, int)}
+ * ใส่เนื้อหาผ่าน {@link #getContent()} (BorderPane) แทน add(..., BorderLayout.X) ของ Swing
  */
-public class ImageBackgroundPanel extends JPanel {
+public class ImageBackgroundPanel extends StackPane {
     private final Map<String, Image> cache = new HashMap<>();
+    private final ImageView imageView = new ImageView();
+    private final Rectangle overlay = new Rectangle();
+    private final Rectangle clip = new Rectangle();
+    private final BorderPane content = new BorderPane();
     private Image image;
-    private int overlayAlpha; // 0-255
 
-    public ImageBackgroundPanel(String resourcePath, int overlayAlpha, LayoutManager layout) {
-        super(layout);
-        this.overlayAlpha = overlayAlpha;
+    public ImageBackgroundPanel(String resourcePath, int overlayAlpha) {
         this.image = loadCached(resourcePath);
+
+        imageView.setImage(image);
+        imageView.setSmooth(true);
+        imageView.setPreserveRatio(false);
+        imageView.setManaged(false);
+        imageView.setMouseTransparent(true);
+
+        overlay.setManaged(false);
+        overlay.setMouseTransparent(true);
+        setOverlayAlpha(overlayAlpha);
+
+        setMinSize(0, 0);
+        setClip(clip); // ตัดส่วนภาพที่เกินกรอบ
+        getChildren().addAll(imageView, overlay, content);
+    }
+
+    /** ที่วางเนื้อหา (ใช้ setCenter / setSouth ... แทน BorderLayout) */
+    public BorderPane getContent() {
+        return content;
     }
 
     /** false ถ้าตอนนี้ไม่มีภาพ (ผู้เรียกควรใช้หน้าตาเดิมแทน) */
@@ -37,9 +62,14 @@ public class ImageBackgroundPanel extends JPanel {
         Image loaded = loadCached(resourcePath);
         if (loaded == null) return false;
         this.image = loaded;
-        this.overlayAlpha = newOverlayAlpha;
-        repaint();
+        imageView.setImage(loaded);
+        setOverlayAlpha(newOverlayAlpha);
+        requestLayout();
         return true;
+    }
+
+    private void setOverlayAlpha(int alpha) {
+        overlay.setFill(Color.rgb(0, 0, 0, Math.max(0, Math.min(255, alpha)) / 255.0));
     }
 
     private Image loadCached(String resourcePath) {
@@ -52,36 +82,33 @@ public class ImageBackgroundPanel extends JPanel {
     private static Image load(String resourcePath) {
         try (InputStream in = ImageBackgroundPanel.class.getResourceAsStream(resourcePath)) {
             if (in == null) return null;
-            return ImageIO.read(in);
+            Image img = new Image(in);
+            return img.isError() ? null : img;
         } catch (IOException e) {
             return null;
         }
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (image == null) return;
+    protected void layoutChildren() {
+        super.layoutChildren();
+        double w = getWidth();
+        double h = getHeight();
 
-        int imgW = image.getWidth(null);
-        int imgH = image.getHeight(null);
-        if (imgW <= 0 || imgH <= 0) return;
+        clip.setWidth(w);
+        clip.setHeight(h);
+        overlay.setWidth(w);
+        overlay.setHeight(h);
+        overlay.relocate(0, 0);
+
+        if (image == null || image.getWidth() <= 0 || image.getHeight() <= 0) return;
 
         // ขยายให้เต็มพื้นที่โดยรักษาสัดส่วน (ส่วนที่เกินถูกตัดออก)
-        double scale = Math.max((double) getWidth() / imgW, (double) getHeight() / imgH);
-        int drawW = (int) Math.ceil(imgW * scale);
-        int drawH = (int) Math.ceil(imgH * scale);
-        int x = (getWidth() - drawW) / 2;
-        int y = (getHeight() - drawH) / 2;
-
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.drawImage(image, x, y, drawW, drawH, null);
-        if (overlayAlpha > 0) {
-            g2.setColor(new Color(0, 0, 0, overlayAlpha));
-            g2.fillRect(0, 0, getWidth(), getHeight());
-        }
-        g2.dispose();
+        double scale = Math.max(w / image.getWidth(), h / image.getHeight());
+        double drawW = Math.ceil(image.getWidth() * scale);
+        double drawH = Math.ceil(image.getHeight() * scale);
+        imageView.setFitWidth(drawW);
+        imageView.setFitHeight(drawH);
+        imageView.relocate((w - drawW) / 2, (h - drawH) / 2);
     }
 }

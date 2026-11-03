@@ -1,46 +1,55 @@
 package football.ui;
 
-import javax.swing.*;
-import java.awt.*;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
-public class MainFrame extends JFrame {
-    private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cardPanel = new JPanel(cardLayout);
+public class MainFrame extends Application {
+    private final StackPane cardPanel = new StackPane();
 
     private MainMenuPanel mainMenuPanel;
     private SquadPanel squadPanel;
     private MatchPanel matchPanel;
     private MatchController matchController;
 
-    public MainFrame() {
-        setTitle("Tactix Football");
-        setSize(1100, 750);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+    @Override
+    public void start(Stage stage) {
+        stage.setTitle("Tactix Football");
+        stage.setOnCloseRequest(e -> Platform.exit());
 
         matchPanel = new MatchPanel(
                 () -> matchController.runMatchSimulation(),
                 () -> {
                     matchController.stop();
-                    cardLayout.show(cardPanel, "MENU");
+                    showCard(mainMenuPanel);
                 });
-        matchController = new MatchController(this, matchPanel);
+        matchController = new MatchController(stage, matchPanel);
 
         squadPanel = new SquadPanel((home, away) -> {
             matchController.setTeams(home, away);
-            cardLayout.show(cardPanel, "MATCH");
+            showCard(matchPanel);
         });
 
         mainMenuPanel = new MainMenuPanel(() -> {
             squadPanel.startNewDraftSession();
-            cardLayout.show(cardPanel, "SQUAD");
+            showCard(squadPanel);
         });
 
-        cardPanel.add(mainMenuPanel, "MENU");
-        cardPanel.add(squadPanel, "SQUAD");
-        cardPanel.add(matchPanel, "MATCH");
+        showCard(mainMenuPanel);
 
-        add(cardPanel);
-        cardLayout.show(cardPanel, "MENU");
+        stage.setScene(new Scene(cardPanel, 1100, 750));
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    /** แสดงหน้าที่ต้องการ (แทน CardLayout.show) */
+    private void showCard(Node card) {
+        cardPanel.getChildren().setAll(card);
+        // กลับมาหน้าเมนูแล้วเพลงเริ่มใหม่ ส่วนหน้าเลือกทีมและหน้าแข่งก่อนเริ่มเพลงเล่นต่อเนื่อง
+        // (เพลงหยุดตอนกด Play Match ใน MatchController)
+        if (card == mainMenuPanel) SoundManager.playMenuMusic();
     }
 }

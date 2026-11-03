@@ -4,11 +4,30 @@ import football.logic.TeamSetupFactory;
 import football.model.*;
 import football.util.PlayerRepository;
 
-import javax.swing.*;
-import java.awt.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TitledPane;
+import javafx.scene.control.Tooltip;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.RowConstraints;
+import javafx.scene.layout.VBox;
+
 import java.util.*;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 public class SquadPanel extends ImageBackgroundPanel {
     private static final String BACKGROUND_PATH = "/image/squad_bg.png";
@@ -24,99 +43,88 @@ public class SquadPanel extends ImageBackgroundPanel {
             "[FRONTWING]", "[FW]",
             "[STRIKER]", "[ST]");
 
-    private JComboBox<String> tacticComboBox, formationComboBox;
+    private ComboBox<String> tacticComboBox, formationComboBox;
 
-    /** tooltip บอกใบ้ของแต่ละตัวเลือก (ทั้งตอนเปิดรายการและตอนเลือกแล้ว) ไม่ใช้ popup */
-    private static void installHints(JComboBox<String> box, java.util.function.Function<String, String> hint) {
-        box.setRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value != null) setToolTipText(hint.apply(value.toString()));
-                return c;
-            }
-        });
-        box.addActionListener(e -> {
-            Object selected = box.getSelectedItem();
-            box.setToolTipText(selected == null ? null : hint.apply(selected.toString()));
-        });
-        Object selected = box.getSelectedItem();
-        box.setToolTipText(selected == null ? null : hint.apply(selected.toString()));
-    }
+    private final ObservableList<Player> poolListModel = FXCollections.observableArrayList();
+    private final ObservableList<Player> starterListModel = FXCollections.observableArrayList();
+    private final ObservableList<Player> benchListModel = FXCollections.observableArrayList();
 
-    private final DefaultListModel<Player> poolListModel = new DefaultListModel<>();
-    private final DefaultListModel<Player> starterListModel = new DefaultListModel<>();
-    private final DefaultListModel<Player> benchListModel = new DefaultListModel<>();
-
-    private JList<Player> poolJList, starterJList, benchJList;
-    private JLabel statusCountLabel;
+    private ListView<Player> poolJList, starterJList, benchJList;
+    private Label statusCountLabel;
 
     private final BiConsumer<TeamSetup, TeamSetup> onSquadConfirmed;
 
     /** @param onSquadConfirmed ถูกเรียกเมื่อกด Confirm สำเร็จ ส่ง (ทีมเหย้า, ทีมเยือน) กลับไป */
     public SquadPanel(BiConsumer<TeamSetup, TeamSetup> onSquadConfirmed) {
-        super(BACKGROUND_PATH, OVERLAY_ALPHA, new BorderLayout(10, 10));
+        super(BACKGROUND_PATH, OVERLAY_ALPHA);
         this.onSquadConfirmed = onSquadConfirmed;
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        JPanel selectionPanel = new JPanel(new GridLayout(1, 3, 10, 10));
-        selectionPanel.setOpaque(false);
-        poolJList = new JList<>(poolListModel);
-        starterJList = new JList<>(starterListModel);
-        benchJList = new JList<>(benchListModel);
-        for (JList<Player> list : List.of(poolJList, starterJList, benchJList)) {
-            list.setCellRenderer(new CompactPlayerRenderer());
+        BorderPane root = getContent();
+        root.setPadding(new Insets(10));
+
+        poolJList = new ListView<>(poolListModel);
+        starterJList = new ListView<>(starterListModel);
+        benchJList = new ListView<>(benchListModel);
+        for (ListView<Player> list : List.of(poolJList, starterJList, benchJList)) {
+            list.setCellFactory(lv -> new CompactPlayerCell());
         }
 
-        selectionPanel.add(createWrappedListPanel("Available Pool (20)", poolJList));
-        selectionPanel.add(createWrappedListPanel("Starters (Need 11)", starterJList));
-        selectionPanel.add(createWrappedListPanel("Bench (Need 5)", benchJList));
-        add(selectionPanel, BorderLayout.CENTER);
+        GridPane selectionPanel = new GridPane();
+        selectionPanel.setHgap(10);
+        selectionPanel.setVgap(10);
+        for (int i = 0; i < 3; i++) {
+            ColumnConstraints cc = new ColumnConstraints();
+            cc.setPercentWidth(100.0 / 3);
+            selectionPanel.getColumnConstraints().add(cc);
+        }
+        RowConstraints rc = new RowConstraints();
+        rc.setVgrow(Priority.ALWAYS);
+        selectionPanel.getRowConstraints().add(rc);
 
-        JPanel transferBtnPanel = new JPanel(new FlowLayout());
-        transferBtnPanel.setOpaque(false);
-        JButton toStarterBtn = new JButton(">> Starter");
-        JButton toBenchBtn = new JButton(">> Bench");
-        JButton removeBtn = new JButton("<< Remove");
-        JButton autoSelectBtn = new JButton("⚡ Auto Select");
+        selectionPanel.add(createWrappedListPanel("Available Pool (20)", poolJList), 0, 0);
+        selectionPanel.add(createWrappedListPanel("Starters (Need 11)", starterJList), 1, 0);
+        selectionPanel.add(createWrappedListPanel("Bench (Need 5)", benchJList), 2, 0);
+        root.setCenter(selectionPanel);
 
-        transferBtnPanel.add(toStarterBtn); transferBtnPanel.add(toBenchBtn);
-        transferBtnPanel.add(removeBtn); transferBtnPanel.add(autoSelectBtn);
+        Button toStarterBtn = new Button(">> Starter");
+        Button toBenchBtn = new Button(">> Bench");
+        Button removeBtn = new Button("<< Remove");
+        Button autoSelectBtn = new Button("⚡ Auto Select");
 
-        toStarterBtn.addActionListener(e -> movePlayer(poolJList, poolListModel, starterListModel, 11));
-        toBenchBtn.addActionListener(e -> movePlayer(poolJList, poolListModel, benchListModel, 5));
-        removeBtn.addActionListener(e -> {
-            if (starterJList.getSelectedValue() != null) movePlayer(starterJList, starterListModel, poolListModel, 20);
-            else if (benchJList.getSelectedValue() != null) movePlayer(benchJList, benchListModel, poolListModel, 20);
+        HBox transferBtnPanel = new HBox(5, toStarterBtn, toBenchBtn, removeBtn, autoSelectBtn, new SoundToggleButton());
+        transferBtnPanel.setAlignment(Pos.CENTER);
+
+        toStarterBtn.setOnAction(e -> movePlayer(poolJList, poolListModel, starterListModel, 11));
+        toBenchBtn.setOnAction(e -> movePlayer(poolJList, poolListModel, benchListModel, 5));
+        removeBtn.setOnAction(e -> {
+            if (starterJList.getSelectionModel().getSelectedItem() != null) movePlayer(starterJList, starterListModel, poolListModel, 20);
+            else if (benchJList.getSelectionModel().getSelectedItem() != null) movePlayer(benchJList, benchListModel, poolListModel, 20);
         });
-        autoSelectBtn.addActionListener(e -> handleAutoSelect());
+        autoSelectBtn.setOnAction(e -> handleAutoSelect());
 
-        JPanel configPanel = new JPanel(new GridLayout(1, 4, 5, 5));
-        configPanel.setOpaque(false);
-        configPanel.setBorder(BorderFactory.createTitledBorder("Tactics & Formation"));
-        tacticComboBox = new JComboBox<>(new String[]{"Counter Attack", "Possession", "Wide Play"});
-        formationComboBox = new JComboBox<>(new String[]{"4-4-2", "4-3-3", "3-4-3", "5-3-2"});
+        tacticComboBox = new ComboBox<>(FXCollections.observableArrayList("Counter Attack", "Possession", "Wide Play"));
+        formationComboBox = new ComboBox<>(FXCollections.observableArrayList("4-4-2", "4-3-3", "3-4-3", "5-3-2"));
+        tacticComboBox.getSelectionModel().selectFirst();
+        formationComboBox.getSelectionModel().selectFirst();
         installHints(tacticComboBox, TacticHints::forTactic);
         installHints(formationComboBox, TacticHints::forFormation);
-        configPanel.add(new JLabel("Tactic:")); configPanel.add(tacticComboBox);
-        configPanel.add(new JLabel("Formation:")); configPanel.add(formationComboBox);
 
-        JPanel midContainer = new JPanel(new BorderLayout());
-        midContainer.setOpaque(false);
-        midContainer.add(transferBtnPanel, BorderLayout.NORTH);
-        midContainer.add(configPanel, BorderLayout.CENTER);
-        statusCountLabel = new JLabel("Starters: 0/11 | Bench: 0/5", SwingConstants.CENTER);
-        midContainer.add(statusCountLabel, BorderLayout.SOUTH);
+        HBox configRow = new HBox(10, new Label("Tactic:"), tacticComboBox, new Label("Formation:"), formationComboBox);
+        configRow.setAlignment(Pos.CENTER_LEFT);
+        TitledPane configPanel = new TitledPane("Tactics & Formation", configRow);
+        configPanel.setCollapsible(false);
 
-        JButton confirmButton = new JButton("Confirm Squad & Start Match");
-        confirmButton.addActionListener(e -> handleConfirmSquad());
+        statusCountLabel = new Label("Starters: 0/11 | Bench: 0/5");
+        statusCountLabel.setMaxWidth(Double.MAX_VALUE);
+        statusCountLabel.setAlignment(Pos.CENTER);
 
-        JPanel outerSouth = new JPanel(new BorderLayout());
-        outerSouth.setOpaque(false);
-        outerSouth.add(midContainer, BorderLayout.CENTER);
-        outerSouth.add(confirmButton, BorderLayout.SOUTH);
-        add(outerSouth, BorderLayout.SOUTH);
+        Button confirmButton = new Button("Confirm Squad & Start Match");
+        confirmButton.setMaxWidth(Double.MAX_VALUE);
+        confirmButton.setOnAction(e -> handleConfirmSquad());
+
+        VBox outerSouth = new VBox(8, transferBtnPanel, configPanel, statusCountLabel, confirmButton);
+        outerSouth.setPadding(new Insets(10, 0, 0, 0));
+        root.setBottom(outerSouth);
     }
 
     /** สุ่ม pool 20 คนใหม่ (เรียกตอนกด Start Game) */
@@ -130,29 +138,29 @@ public class SquadPanel extends ImageBackgroundPanel {
         Collections.shuffle(gks); Collections.shuffle(outfields);
 
         poolListModel.clear(); starterListModel.clear(); benchListModel.clear();
-        if (!gks.isEmpty()) poolListModel.addElement(gks.remove(0));
+        if (!gks.isEmpty()) poolListModel.add(gks.remove(0));
         outfields.addAll(gks); Collections.shuffle(outfields);
 
         while (poolListModel.size() < 20 && !outfields.isEmpty()) {
-            poolListModel.addElement(outfields.remove(0));
+            poolListModel.add(outfields.remove(0));
         }
         updateCounts();
     }
 
-    private void movePlayer(JList<Player> sourceList, DefaultListModel<Player> source, DefaultListModel<Player> target, int maxLimit) {
-        Player p = sourceList.getSelectedValue();
+    private void movePlayer(ListView<Player> sourceList, ObservableList<Player> source, ObservableList<Player> target, int maxLimit) {
+        Player p = sourceList.getSelectionModel().getSelectedItem();
         if (p != null && target.size() < maxLimit) {
-            source.removeElement(p);
-            target.addElement(p);
+            source.remove(p);
+            target.add(p);
             updateCounts();
         }
     }
 
     private void handleAutoSelect() {
         List<Player> all = new ArrayList<>();
-        for (int i = 0; i < poolListModel.size(); i++) all.add(poolListModel.getElementAt(i));
-        for (int i = 0; i < starterListModel.size(); i++) all.add(starterListModel.getElementAt(i));
-        for (int i = 0; i < benchListModel.size(); i++) all.add(benchListModel.getElementAt(i));
+        all.addAll(poolListModel);
+        all.addAll(starterListModel);
+        all.addAll(benchListModel);
 
         List<Player> gks = new ArrayList<>(), outfields = new ArrayList<>();
         for (Player p : all) {
@@ -163,54 +171,101 @@ public class SquadPanel extends ImageBackgroundPanel {
         Collections.shuffle(gks); Collections.shuffle(outfields);
         starterListModel.clear(); benchListModel.clear(); poolListModel.clear();
 
-        starterListModel.addElement(gks.remove(0));
-        for (int i = 0; i < 10 && !outfields.isEmpty(); i++) starterListModel.addElement(outfields.remove(0));
+        starterListModel.add(gks.remove(0));
+        for (int i = 0; i < 10 && !outfields.isEmpty(); i++) starterListModel.add(outfields.remove(0));
         outfields.addAll(gks); Collections.shuffle(outfields);
-        for (int i = 0; i < 5 && !outfields.isEmpty(); i++) benchListModel.addElement(outfields.remove(0));
-        for (Player p : outfields) poolListModel.addElement(p);
+        for (int i = 0; i < 5 && !outfields.isEmpty(); i++) benchListModel.add(outfields.remove(0));
+        for (Player p : outfields) poolListModel.add(p);
         updateCounts();
     }
 
     private void handleConfirmSquad() {
         if (starterListModel.size() != 11 || benchListModel.size() != 5) {
-            JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this),
-                    "เลือกตัวจริงให้ครบ 11 คน และตัวสำรอง 5 คน!", "Error", JOptionPane.ERROR_MESSAGE);
+            Alert alert = new Alert(Alert.AlertType.ERROR, "เลือกตัวจริงให้ครบ 11 คน และตัวสำรอง 5 คน!");
+            alert.setTitle("Error");
+            alert.setHeaderText(null);
+            if (getScene() != null) alert.initOwner(getScene().getWindow());
+            alert.showAndWait();
             return;
         }
-        List<Player> starters = Collections.list(starterListModel.elements());
-        List<Player> bench = Collections.list(benchListModel.elements());
+        List<Player> starters = new ArrayList<>(starterListModel);
+        List<Player> bench = new ArrayList<>(benchListModel);
 
         TeamSetup home = TeamSetupFactory.createHome(
-                (String) tacticComboBox.getSelectedItem(),
-                (String) formationComboBox.getSelectedItem(),
+                tacticComboBox.getValue(),
+                formationComboBox.getValue(),
                 starters, bench);
         TeamSetup away = TeamSetupFactory.createRandomAway();
 
         onSquadConfirmed.accept(home, away);
     }
 
-    private JPanel createWrappedListPanel(String title, JList<Player> list) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.setOpaque(false);
-        p.setBorder(BorderFactory.createTitledBorder(title));
-        p.add(new JScrollPane(list), BorderLayout.CENTER);
+    /** tooltip บอกใบ้: ที่ตัว combo (ตามตัวเลือกที่เลือกอยู่) และที่แต่ละรายการใน dropdown */
+    private static void installHints(ComboBox<String> box, Function<String, String> hint) {
+        Tooltip boxTip = new Tooltip();
+        boxTip.setWrapText(true);
+        boxTip.setMaxWidth(340);
+        Runnable update = () -> {
+            String t = box.getValue() == null ? null : hint.apply(box.getValue());
+            boxTip.setText(t == null ? "" : t);
+        };
+        box.valueProperty().addListener((obs, oldV, newV) -> update.run());
+        update.run();
+        box.setTooltip(boxTip);
+
+        box.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setTooltip(null);
+                } else {
+                    setText(item);
+                    String t = hint.apply(item);
+                    if (t == null) {
+                        setTooltip(null);
+                    } else {
+                        Tooltip tip = new Tooltip(t);
+                        tip.setWrapText(true);
+                        tip.setMaxWidth(340);
+                        setTooltip(tip);
+                    }
+                }
+            }
+        });
+        // ช่องที่แสดงค่าที่เลือกอยู่ ใช้ข้อความธรรมดา (tooltip ของช่องดูแลโดย boxTip)
+        box.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null ? null : item);
+            }
+        });
+    }
+
+    private TitledPane createWrappedListPanel(String title, ListView<Player> list) {
+        TitledPane p = new TitledPane(title, list);
+        p.setCollapsible(false);
+        p.setMaxWidth(Double.MAX_VALUE);
+        p.setMaxHeight(Double.MAX_VALUE);
         return p;
     }
 
     /**
      * แสดงผู้เล่นในลิสต์แบบสั้น เพื่อไม่ให้ข้อความโดนตัด
      * ใช้ข้อความ toString() เดิมของ Player แล้วย่อตำแหน่งกับตัวคั่น (ไม่ต้องแก้ Player)
-     * เอาเมาส์ชี้เพื่อดูข้อความเต็มใน tooltip
      */
-    private static class CompactPlayerRenderer extends DefaultListCellRenderer {
+    private static class CompactPlayerCell extends ListCell<Player> {
         @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                      boolean isSelected, boolean cellHasFocus) {
-            JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-            String full = String.valueOf(value);
-            label.setText(compact(full));
-            label.setToolTipText(full);
-            return label;
+        protected void updateItem(Player item, boolean empty) {
+            super.updateItem(item, empty);
+            if (empty || item == null) {
+                setText(null);
+            } else {
+                String full = String.valueOf(item);
+                setText(compact(full));
+            }
         }
 
         private static String compact(String text) {

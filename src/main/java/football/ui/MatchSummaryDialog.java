@@ -1,78 +1,114 @@
 package football.ui;
 
 import football.logic.MatchStatistics;
-import javax.swing.*;
-import java.awt.*;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
-public class MatchSummaryDialog extends JDialog {
+public class MatchSummaryDialog extends Stage {
 
-    public MatchSummaryDialog(Frame owner, String homeTeamName, String awayTeamName,
+    public MatchSummaryDialog(Stage owner, String homeTeamName, String awayTeamName,
                               int homeScore, int awayScore, MatchStatistics stats) {
-        super(owner, "Post-Match Analysis & Statistics", true);
-        setLayout(new BorderLayout(10, 10));
-        setSize(500, 420);
-        setLocationRelativeTo(owner);
+        initOwner(owner);
+        initModality(Modality.WINDOW_MODAL);
+        setTitle("Post-Match Analysis & Statistics");
+
+        BorderPane root = new BorderPane();
 
         // 1. Title Header & Final Score
-        JPanel headerPanel = new JPanel(new GridLayout(2, 1));
-        headerPanel.setBackground(new Color(40, 45, 52));
+        Label titleLabel = new Label("MATCH SUMMARY");
+        titleLabel.setTextFill(Color.LIGHTGRAY);
+        titleLabel.setFont(Font.font("SansSerif", FontWeight.BOLD, 14));
 
-        JLabel titleLabel = new JLabel("MATCH SUMMARY", SwingConstants.CENTER);
-        titleLabel.setForeground(Color.LIGHT_GRAY);
-        titleLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        Label scoreLabel = new Label(String.format("%s  %d - %d  %s", homeTeamName, homeScore, awayScore, awayTeamName));
+        scoreLabel.setTextFill(Color.WHITE);
+        scoreLabel.setFont(Font.font("SansSerif", FontWeight.BOLD, 22));
 
-        JLabel scoreLabel = new JLabel(String.format("%s  %d - %d  %s", homeTeamName, homeScore, awayScore, awayTeamName), SwingConstants.CENTER);
-        scoreLabel.setForeground(Color.WHITE);
-        scoreLabel.setFont(new Font("SansSerif", Font.BOLD, 22));
+        VBox headerPanel = new VBox(6, titleLabel, scoreLabel);
+        headerPanel.setAlignment(Pos.CENTER);
+        headerPanel.setPadding(new Insets(10));
+        headerPanel.setBackground(new Background(new BackgroundFill(Color.rgb(40, 45, 52), CornerRadii.EMPTY, Insets.EMPTY)));
+        root.setTop(headerPanel);
 
-        headerPanel.add(titleLabel);
-        headerPanel.add(scoreLabel);
-        add(headerPanel, BorderLayout.NORTH);
-
-        // 2. Stats Comparison Table Panel
-        JPanel statsPanel = new JPanel(new GridLayout(5, 3, 10, 8)); // 📌 แก้ไขจาก (6, 3) เป็น (5, 3) ให้พอดีกับ 5 แถว
-        statsPanel.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 20));
+        // 2. Stats Comparison Table Panel (5 แถว x 3 คอลัมน์)
+        GridPane statsPanel = new GridPane();
+        statsPanel.setHgap(10);
+        statsPanel.setVgap(8);
+        statsPanel.setPadding(new Insets(15, 20, 15, 20));
+        for (int i = 0; i < 3; i++) {
+            ColumnConstraints cc = new ColumnConstraints();
+            cc.setPercentWidth(100.0 / 3);
+            statsPanel.getColumnConstraints().add(cc);
+        }
 
         // 📌 Null-Safety Check
         if (stats != null) {
-            addStatRow(statsPanel, stats.getHomePossessionPercent() + "%", "Possession", stats.getAwayPossessionPercent() + "%");
-            addStatRow(statsPanel, String.valueOf(stats.getHomeShots()), "Total Shots", String.valueOf(stats.getAwayShots()));
-            addStatRow(statsPanel, String.valueOf(stats.getHomeShotsOnTarget()), "Shots on Target", String.valueOf(stats.getAwayShotsOnTarget()));
-            addStatRow(statsPanel, String.valueOf(stats.getHomeYellowCards()), "Yellow Cards", String.valueOf(stats.getAwayYellowCards()));
-            addStatRow(statsPanel, String.valueOf(stats.getHomeRedCards()), "Red Cards", String.valueOf(stats.getAwayRedCards()));
+            addStatRow(statsPanel, 0, stats.getHomePossessionPercent() + "%", "Possession", stats.getAwayPossessionPercent() + "%");
+            addStatRow(statsPanel, 1, String.valueOf(stats.getHomeShots()), "Total Shots", String.valueOf(stats.getAwayShots()));
+            addStatRow(statsPanel, 2, String.valueOf(stats.getHomeShotsOnTarget()), "Shots on Target", String.valueOf(stats.getAwayShotsOnTarget()));
+            addStatRow(statsPanel, 3, String.valueOf(stats.getHomeYellowCards()), "Yellow Cards", String.valueOf(stats.getAwayYellowCards()));
+            addStatRow(statsPanel, 4, String.valueOf(stats.getHomeRedCards()), "Red Cards", String.valueOf(stats.getAwayRedCards()));
         } else {
-            addStatRow(statsPanel, "50%", "Possession", "50%");
-            addStatRow(statsPanel, "0", "Total Shots", "0");
-            addStatRow(statsPanel, "0", "Shots on Target", "0");
-            addStatRow(statsPanel, "0", "Yellow Cards", "0");
-            addStatRow(statsPanel, "0", "Red Cards", "0");
+            addStatRow(statsPanel, 0, "50%", "Possession", "50%");
+            addStatRow(statsPanel, 1, "0", "Total Shots", "0");
+            addStatRow(statsPanel, 2, "0", "Shots on Target", "0");
+            addStatRow(statsPanel, 3, "0", "Yellow Cards", "0");
+            addStatRow(statsPanel, 4, "0", "Red Cards", "0");
         }
-
-        add(statsPanel, BorderLayout.CENTER);
+        root.setCenter(statsPanel);
 
         // 3. Close Button
-        JButton closeBtn = new JButton("Close & Return to Menu");
-        closeBtn.setFont(new Font("SansSerif", Font.BOLD, 12));
-        closeBtn.addActionListener(e -> dispose());
+        Button closeBtn = new Button("Close & Return to Menu");
+        closeBtn.setFont(Font.font("SansSerif", FontWeight.BOLD, 12));
+        closeBtn.setOnAction(e -> close());
 
-        JPanel bottomPanel = new JPanel();
-        bottomPanel.add(closeBtn);
-        add(bottomPanel, BorderLayout.SOUTH);
+        HBox bottomPanel = new HBox(closeBtn);
+        bottomPanel.setAlignment(Pos.CENTER);
+        bottomPanel.setPadding(new Insets(10));
+        root.setBottom(bottomPanel);
+
+        setScene(new Scene(root, 500, 420));
+
+        setOnShown(e -> {
+            if (owner != null) {
+                setX(owner.getX() + (owner.getWidth() - getWidth()) / 2);
+                setY(owner.getY() + (owner.getHeight() - getHeight()) / 2);
+            }
+        });
     }
 
-    private void addStatRow(JPanel panel, String homeVal, String statName, String awayVal) {
-        JLabel homeLbl = new JLabel(homeVal, SwingConstants.RIGHT);
-        homeLbl.setFont(new Font("SansSerif", Font.BOLD, 14));
+    private void addStatRow(GridPane grid, int row, String homeVal, String statName, String awayVal) {
+        Label homeLbl = new Label(homeVal);
+        homeLbl.setFont(Font.font("SansSerif", FontWeight.BOLD, 14));
+        GridPane.setHalignment(homeLbl, HPos.RIGHT);
 
-        JLabel nameLbl = new JLabel(statName, SwingConstants.CENTER);
-        nameLbl.setForeground(Color.GRAY);
-        nameLbl.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        Label nameLbl = new Label(statName);
+        nameLbl.setTextFill(Color.GRAY);
+        nameLbl.setFont(Font.font("SansSerif", 12));
+        GridPane.setHalignment(nameLbl, HPos.CENTER);
 
-        JLabel awayLbl = new JLabel(awayVal, SwingConstants.LEFT);
-        awayLbl.setFont(new Font("SansSerif", Font.BOLD, 14));
+        Label awayLbl = new Label(awayVal);
+        awayLbl.setFont(Font.font("SansSerif", FontWeight.BOLD, 14));
+        GridPane.setHalignment(awayLbl, HPos.LEFT);
 
-        panel.add(homeLbl);
-        panel.add(nameLbl);
-        panel.add(awayLbl);
+        grid.add(homeLbl, 0, row);
+        grid.add(nameLbl, 1, row);
+        grid.add(awayLbl, 2, row);
     }
 }

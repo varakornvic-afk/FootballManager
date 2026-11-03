@@ -1,34 +1,38 @@
 package football.ui;
 
 import football.event.*;
-import football.model.*;
 
-import javax.swing.*;
-import java.awt.*;
+import javafx.stage.Stage;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 
 /** จัดการ Pop-up เหตุการณ์ในเกม (แสดง / ปิดอัตโนมัติ) */
 public class PopupManager {
-    private final JFrame parent;
-    private final Supplier<javax.swing.Timer> liveTimerSupplier;
+    private final Stage parent;
+    private final Supplier<UiTimer> liveTimerSupplier;
+    private final List<EventPopupDialog> openPopups = new ArrayList<>();
 
-    public PopupManager(JFrame parent, Supplier<javax.swing.Timer> liveTimerSupplier) {
+    public PopupManager(Stage parent, Supplier<UiTimer> liveTimerSupplier) {
         this.parent = parent;
         this.liveTimerSupplier = liveTimerSupplier;
     }
 
     /** แสดง popup เฉย ๆ (ไม่หยุด/ไม่เริ่ม timer ให้) */
     public void showPopup(GameEvent event, boolean isHome) {
-        EventPopupDialog.showPopup(parent, event, isHome);
+        EventPopupDialog dialog = EventPopupDialog.showPopup(parent, event, isHome);
+        openPopups.add(dialog);
+        dialog.setOnHidden(e -> openPopups.remove(dialog));
     }
 
     public void showEventPopupAndWait(GameEvent event, boolean isHome, boolean autoResume) {
-        javax.swing.Timer liveTimer = liveTimerSupplier.get();
+        UiTimer liveTimer = liveTimerSupplier.get();
         if (liveTimer != null) liveTimer.stop();
 
-        javax.swing.Timer autoCloseTimer = new javax.swing.Timer(2000, e -> {
+        UiTimer autoCloseTimer = new UiTimer(2000, () -> {
             closeCurrentPopup();
-            javax.swing.Timer t = liveTimerSupplier.get();
+            UiTimer t = liveTimerSupplier.get();
             if (autoResume && t != null) {
                 t.start();
             }
@@ -36,21 +40,13 @@ public class PopupManager {
         autoCloseTimer.setRepeats(false);
         autoCloseTimer.start();
 
-        EventPopupDialog.showPopup(parent, event, isHome);
+        showPopup(event, isHome);
     }
 
     public void closeCurrentPopup() {
-        for (Window window : Window.getWindows()) {
-            if (window instanceof JDialog && window.isVisible() && window != parent) {
-                String title = ((JDialog) window).getTitle();
-                if (title != null && (title.contains("Pause") || title.contains("Substitution") ||
-                        title.contains("Forfeited") || title.contains("Summary") ||
-                        title.contains("Statistics") || title.contains("Result") ||
-                        title.contains("Tactical"))) {
-                    continue;
-                }
-                window.dispose();
-            }
+        for (EventPopupDialog dialog : new ArrayList<>(openPopups)) {
+            dialog.close();
         }
+        openPopups.clear();
     }
 }

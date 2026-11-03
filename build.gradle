@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
 }
 
 group = 'football'
@@ -7,6 +8,12 @@ version = '1.0'
 
 repositories {
     mavenCentral()
+}
+
+// JavaFX: ใช้เวอร์ชันให้ตรงกับที่วิชาแนะนำ (ถ้าวิชาให้เลข version อื่น แก้บรรทัด version ตรงนี้)
+javafx {
+    version = '25.0.1'
+    modules = ['javafx.controls', 'javafx.media']
 }
 
 dependencies {
@@ -25,10 +32,17 @@ jar {
     manifest {
         attributes 'Main-Class': 'football.Main'
     }
+    // รวม JavaFX เข้าไปใน jar เดียว เพื่อให้ java -jar FootballManager.jar รันได้
+    // (Main ไม่ได้ extends Application จึงไม่ติดปัญหา "JavaFX runtime components are missing")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'module-info.class'
 }
 
 tasks.withType(JavaCompile).configureEach {
-    options.release = 17
+    // ไม่ตั้ง options.release = 17 แล้ว เพราะ JavaFX รุ่นใหม่ต้องใช้ JDK 23+
     options.encoding = 'UTF-8'
 }
 javadoc {

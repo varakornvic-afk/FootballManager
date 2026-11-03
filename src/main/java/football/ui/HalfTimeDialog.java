@@ -1,15 +1,35 @@
 package football.ui;
 
 import football.model.*;
-import javax.swing.*;
-import javax.swing.border.TitledBorder;
-import java.awt.*;
+
+import javafx.collections.FXCollections;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.TitledPane;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class HalfTimeDialog extends JDialog {
+public class HalfTimeDialog extends Stage {
     private TeamSetup updatedTeamSetup;
     private boolean confirmed = false;
 
@@ -19,118 +39,119 @@ public class HalfTimeDialog extends JDialog {
 
     // บันทึกรายชื่อนักเตะที่ถูกถอดออกจากสนามแล้ว + คนที่โดนใบแดง (ห้ามเลือก)
     private final Set<Player> subbedOutPlayers = new HashSet<>();
-    private final TitledBorder subPanelBorder;
+    private final TitledPane subPanel;
 
-    public HalfTimeDialog(JFrame parent, TeamSetup currentSetup, TeamSetup awaySetup,
+    public HalfTimeDialog(Stage parent, TeamSetup currentSetup, TeamSetup awaySetup,
                           Set<String> yellowCardPlayers, Set<Player> redCardedPlayers, int currentSubsUsed) {
-        super(parent, "Half-Time Tactics & Substitutions", true);
+        initOwner(parent);
+        initModality(Modality.WINDOW_MODAL);
+        setTitle("Half-Time Tactics & Substitutions");
         this.currentSubsUsed = currentSubsUsed;
-        setSize(620, 640);
-        setLocationRelativeTo(parent);
-        setLayout(new BorderLayout(10, 10));
 
         if (redCardedPlayers != null) {
             this.subbedOutPlayers.addAll(redCardedPlayers);
         }
 
-        JPanel contentPanel = new JPanel(new GridLayout(6, 1, 8, 8));
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        VBox contentPanel = new VBox(8);
+        contentPanel.setPadding(new Insets(15));
 
         // 🔍 0. Opponent Scout Report
-        JPanel scoutPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        scoutPanel.setBorder(BorderFactory.createTitledBorder("🔍 Opponent Scout Report (ข้อมูลคู่แข่ง)"));
-        scoutPanel.setBackground(new Color(245, 245, 250));
-
         String awayTacticName = awaySetup != null && awaySetup.getTactic() != null ?
                 awaySetup.getTactic().getClass().getSimpleName() : "Unknown";
         String awayFormName = awaySetup != null && awaySetup.getFormation() != null ?
                 awaySetup.getFormation().getClass().getSimpleName().replace("Formation", "") : "Unknown";
         Stance awayStance = awaySetup != null ? awaySetup.getStance() : Stance.NORMAL;
 
-        JLabel scoutLabel = new JLabel(String.format("<html><b>Tactic (Fixed):</b> <font color='blue'>%s</font> | <b>Formation:</b> <font color='blue'>%s</font> | <b>Stance:</b> <font color='blue'>%s</font></html>",
-                awayTacticName, awayFormName, awayStance));
-        scoutLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        scoutPanel.add(scoutLabel);
+        TextFlow scoutLabel = new TextFlow(
+                boldText("Tactic (Fixed): "), blueText(awayTacticName), plainText(" | "),
+                boldText("Formation: "), blueText(awayFormName), plainText(" | "),
+                boldText("Stance: "), blueText(String.valueOf(awayStance)));
+        TitledPane scoutPanel = new TitledPane("🔍 Opponent Scout Report (ข้อมูลคู่แข่ง)", scoutLabel);
+        scoutPanel.setCollapsible(false);
 
         // 1. Tactic (Fixed) & Formation ฝั่งเรา
-        JPanel tacticPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         String homeTacticName = currentSetup != null && currentSetup.getTactic() != null ?
                 currentSetup.getTactic().getClass().getSimpleName() : "Standard";
 
-        JLabel tacticFixedLabel = new JLabel("Tactic (Fixed): 🔒 " + homeTacticName + "    ");
-        tacticFixedLabel.setFont(new Font("Segoe UI", Font.BOLD, 13));
-        tacticPanel.add(tacticFixedLabel);
+        Label tacticFixedLabel = new Label("Tactic (Fixed): 🔒 " + homeTacticName + "    ");
+        tacticFixedLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
 
-        tacticPanel.add(new JLabel("Formation: "));
-        JComboBox<String> formCombo = new JComboBox<>(new String[]{"4-4-2", "4-3-3", "3-4-3", "5-3-2"});
+        ComboBox<String> formCombo = new ComboBox<>(FXCollections.observableArrayList("4-4-2", "4-3-3", "3-4-3", "5-3-2"));
+        formCombo.getSelectionModel().selectFirst();
         if (currentSetup != null && currentSetup.getFormation() != null) {
             String currentFormStr = currentSetup.getFormation().getClass().getSimpleName().replace("Formation", "");
             if (currentFormStr.length() >= 3) {
-                formCombo.setSelectedItem(currentFormStr.substring(0, 1) + "-" + currentFormStr.substring(1, 2) + "-" + currentFormStr.substring(2));
+                formCombo.setValue(currentFormStr.substring(0, 1) + "-" + currentFormStr.substring(1, 2) + "-" + currentFormStr.substring(2));
             }
         }
-        tacticPanel.add(formCombo);
+        HBox tacticPanel = new HBox(5, tacticFixedLabel, new Label("Formation: "), formCombo);
+        tacticPanel.setAlignment(Pos.CENTER_LEFT);
 
         // 2. Team Stance ฝั่งเรา
-        JPanel stancePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        stancePanel.add(new JLabel("Team Stance: "));
-        JComboBox<Stance> stanceCombo = new JComboBox<>(Stance.values());
+        ComboBox<Stance> stanceCombo = new ComboBox<>(FXCollections.observableArrayList(Stance.values()));
+        stanceCombo.getSelectionModel().selectFirst();
         if (currentSetup != null && currentSetup.getStance() != null) {
-            stanceCombo.setSelectedItem(currentSetup.getStance());
+            stanceCombo.setValue(currentSetup.getStance());
         }
-        stancePanel.add(stanceCombo);
+        HBox stancePanel = new HBox(5, new Label("Team Stance: "), stanceCombo);
+        stancePanel.setAlignment(Pos.CENTER_LEFT);
 
         // 3. Substitutions List
         List<Player> starters = new ArrayList<>(currentSetup.getStarters());
         List<Player> bench = new ArrayList<>(currentSetup.getBench());
 
-        JPanel subPanel = new JPanel(new GridLayout(2, 2, 5, 5));
-        subPanelBorder = BorderFactory.createTitledBorder(getPanelSubTitle(starters.size()));
-        subPanel.setBorder(subPanelBorder);
-
-        JComboBox<Player> starterCombo = new JComboBox<>();
-        JComboBox<Player> benchCombo = new JComboBox<>();
+        ComboBox<Player> starterCombo = new ComboBox<>();
+        ComboBox<Player> benchCombo = new ComboBox<>();
+        starterCombo.setMaxWidth(Double.MAX_VALUE);
+        benchCombo.setMaxWidth(Double.MAX_VALUE);
 
         updateComboBoxModels(starterCombo, benchCombo, starters, bench, yellowCardPlayers);
 
-        subPanel.add(new JLabel("Out (Starter):")); subPanel.add(starterCombo);
-        subPanel.add(new JLabel("In (Bench):")); subPanel.add(benchCombo);
+        GridPane subGrid = new GridPane();
+        subGrid.setHgap(5);
+        subGrid.setVgap(5);
+        subGrid.add(new Label("Out (Starter):"), 0, 0);
+        subGrid.add(starterCombo, 1, 0);
+        subGrid.add(new Label("In (Bench):"), 0, 1);
+        subGrid.add(benchCombo, 1, 1);
+        javafx.scene.layout.ColumnConstraints labelCol = new javafx.scene.layout.ColumnConstraints();
+        javafx.scene.layout.ColumnConstraints fieldCol = new javafx.scene.layout.ColumnConstraints();
+        fieldCol.setHgrow(javafx.scene.layout.Priority.ALWAYS);
+        subGrid.getColumnConstraints().addAll(labelCol, fieldCol);
+
+        subPanel = new TitledPane(getPanelSubTitle(starters.size()), subGrid);
+        subPanel.setCollapsible(false);
 
         // 4. Action Buttons
-        JPanel btnActionPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
-        JButton swapBtn = new JButton("🔄 Swap Player");
-        JButton recommendBtn = new JButton("💡 Smart Recommend");
-
-        btnActionPanel.add(swapBtn);
-        btnActionPanel.add(recommendBtn);
+        Button swapBtn = new Button("🔄 Swap Player");
+        Button recommendBtn = new Button("💡 Smart Recommend");
+        HBox btnActionPanel = new HBox(10, swapBtn, recommendBtn);
+        btnActionPanel.setAlignment(Pos.CENTER);
 
         // 🔄 ปุ่มสลับตัว (ดักจับโควตาไม่เกิน 3 คน)
-        swapBtn.addActionListener(ev -> {
+        swapBtn.setOnAction(ev -> {
             // 🚨 เช็กว่าโควตา 3 คนเต็มหรือยัง
             if (this.currentSubsUsed + newSubsMadeInSession >= 3) {
-                JOptionPane.showMessageDialog(this,
-                        "คุณใช้โควตาเปลี่ยนตัวครบ 3 คนแล้ว! ไม่สามารถเปลี่ยนเพิ่มได้อีก",
-                        "Substitutions Limit Reached", JOptionPane.WARNING_MESSAGE);
+                showMessage(Alert.AlertType.WARNING, "Substitutions Limit Reached",
+                        "คุณใช้โควตาเปลี่ยนตัวครบ 3 คนแล้ว! ไม่สามารถเปลี่ยนเพิ่มได้อีก");
                 return;
             }
 
-            Player pOut = (Player) starterCombo.getSelectedItem();
-            Player pIn = (Player) benchCombo.getSelectedItem();
+            Player pOut = starterCombo.getValue();
+            Player pIn = benchCombo.getValue();
 
             if (pOut == null || pIn == null) return;
 
             if (subbedOutPlayers.contains(pIn)) {
-                JOptionPane.showMessageDialog(this,
-                        "นักเตะ " + pIn.getName() + " ไม่สามารถเปลี่ยนลงสนามได้ (ถูกถอดออกแล้ว หรือ โดนใบแดง)!",
-                        "Substitution Restriction", JOptionPane.WARNING_MESSAGE);
+                showMessage(Alert.AlertType.WARNING, "Substitution Restriction",
+                        "นักเตะ " + pIn.getName() + " ไม่สามารถเปลี่ยนลงสนามได้ (ถูกถอดออกแล้ว หรือ โดนใบแดง)!");
                 return;
             }
 
             // ผู้รักษาประตูเปลี่ยนได้เฉพาะกับผู้รักษาประตูด้วยกัน (ทีมต้องมี GK 1 คนเสมอ)
             if ((pOut.getPosition() == Position.GK) != (pIn.getPosition() == Position.GK)) {
-                JOptionPane.showMessageDialog(this,
-                        "ผู้รักษาประตูเปลี่ยนได้เฉพาะกับผู้รักษาประตูด้วยกันเท่านั้น!",
-                        "Substitution Restriction", JOptionPane.WARNING_MESSAGE);
+                showMessage(Alert.AlertType.WARNING, "Substitution Restriction",
+                        "ผู้รักษาประตูเปลี่ยนได้เฉพาะกับผู้รักษาประตูด้วยกันเท่านั้น!");
                 return;
             }
 
@@ -143,19 +164,19 @@ public class HalfTimeDialog extends JDialog {
                 subbedOutPlayers.add(pOut);
                 newSubsMadeInSession++;
 
-                subPanelBorder.setTitle(getPanelSubTitle(starters.size()));
-                subPanel.repaint();
+                subPanel.setText(getPanelSubTitle(starters.size()));
 
                 updateComboBoxModels(starterCombo, benchCombo, starters, bench, yellowCardPlayers);
 
-                int remaining = 3 - (this.currentSubsUsed + newSubsMadeInSession); // 📌 แก้ไข Syntax Error
-                JOptionPane.showMessageDialog(this, "สลับตัวเรียบร้อย: " + pOut.getName() + " (ออก) ↔ " + pIn.getName() + " (เข้า)\nโควตาคงเหลือ: " + remaining + "/3");
+                int remaining = 3 - (this.currentSubsUsed + newSubsMadeInSession);
+                showMessage(Alert.AlertType.INFORMATION, "Message",
+                        "สลับตัวเรียบร้อย: " + pOut.getName() + " (ออก) ↔ " + pIn.getName() + " (เข้า)\nโควตาคงเหลือ: " + remaining + "/3");
             }
         });
 
-        recommendBtn.addActionListener(ev -> {
+        recommendBtn.setOnAction(ev -> {
             if (this.currentSubsUsed + newSubsMadeInSession >= 3) {
-                JOptionPane.showMessageDialog(this, "คุณใช้โควตาเปลี่ยนตัวครบ 3 คนแล้ว!", "Limit Reached", JOptionPane.WARNING_MESSAGE);
+                showMessage(Alert.AlertType.WARNING, "Limit Reached", "คุณใช้โควตาเปลี่ยนตัวครบ 3 คนแล้ว!");
                 return;
             }
 
@@ -181,28 +202,24 @@ public class HalfTimeDialog extends JDialog {
             }
 
             if (worstStarter != null && bestBench != null) {
-                starterCombo.setSelectedItem(worstStarter);
-                benchCombo.setSelectedItem(bestBench);
-                JOptionPane.showMessageDialog(this,
+                starterCombo.setValue(worstStarter);
+                benchCombo.setValue(bestBench);
+                showMessage(Alert.AlertType.INFORMATION, "Substitution Recommendation",
                         "💡 แนะนำเปลี่ยนตัว:\n" +
                                 "ถอด: " + worstStarter.getName() + " [" + worstStarter.getPosition() + "] " + worstStarter.getStaminaStatusIcon() + "\n" +
-                                "ส่ง: " + bestBench.getName() + " [" + bestBench.getPosition() + "] " + bestBench.getStaminaStatusIcon() + " เข้าแทน",
-                        "Substitution Recommendation", JOptionPane.INFORMATION_MESSAGE);
+                                "ส่ง: " + bestBench.getName() + " [" + bestBench.getPosition() + "] " + bestBench.getStaminaStatusIcon() + " เข้าแทน");
             } else {
-                JOptionPane.showMessageDialog(this, "ไม่มีตัวสำรองที่สามารถเปลี่ยนลงสนามได้แล้ว", "Notice", JOptionPane.INFORMATION_MESSAGE);
+                showMessage(Alert.AlertType.INFORMATION, "Notice", "ไม่มีตัวสำรองที่สามารถเปลี่ยนลงสนามได้แล้ว");
             }
         });
 
-        contentPanel.add(scoutPanel);
-        contentPanel.add(tacticPanel);
-        contentPanel.add(stancePanel);
-        contentPanel.add(subPanel);
-        contentPanel.add(btnActionPanel);
+        contentPanel.getChildren().addAll(scoutPanel, tacticPanel, stancePanel, subPanel, btnActionPanel);
 
-        JButton startH2Btn = new JButton("Start Second Half ⚽");
-        startH2Btn.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        startH2Btn.addActionListener(ev -> {
-            String selectedForm = (String) formCombo.getSelectedItem();
+        Button startH2Btn = new Button("Start Second Half ⚽");
+        startH2Btn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
+        startH2Btn.setMaxWidth(Double.MAX_VALUE);
+        startH2Btn.setOnAction(ev -> {
+            String selectedForm = formCombo.getValue();
 
             // 📌 ปรับปรุงให้รองรับทุก Formation ตาม Dropdown
             Formation newForm;
@@ -213,16 +230,54 @@ public class HalfTimeDialog extends JDialog {
                 default: newForm = new Formation442(); break;
             }
 
-            Stance newStance = (Stance) stanceCombo.getSelectedItem();
+            Stance newStance = stanceCombo.getValue();
 
             // ใช้ withLineup แทน create เพราะตัวจริงอาจเหลือน้อยกว่า 11 คน (โดนใบแดง)
             updatedTeamSetup = currentSetup.withLineup(newForm, newStance, starters, bench);
             confirmed = true;
-            dispose();
+            close();
         });
 
-        add(contentPanel, BorderLayout.CENTER);
-        add(startH2Btn, BorderLayout.SOUTH);
+        BorderPane root = new BorderPane();
+        root.setCenter(contentPanel);
+        BorderPane.setMargin(startH2Btn, new Insets(0, 15, 15, 15));
+        root.setBottom(startH2Btn);
+
+        setScene(new Scene(root, 620, 560));
+
+        setOnShown(e -> {
+            if (parent != null) {
+                setX(parent.getX() + (parent.getWidth() - getWidth()) / 2);
+                setY(parent.getY() + (parent.getHeight() - getHeight()) / 2);
+            }
+        });
+    }
+
+    private void showMessage(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type, message);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.initOwner(this);
+        alert.showAndWait();
+    }
+
+    private static Text boldText(String s) {
+        Text t = new Text(s);
+        t.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        return t;
+    }
+
+    private static Text blueText(String s) {
+        Text t = new Text(s);
+        t.setFont(Font.font("Segoe UI", 14));
+        t.setFill(Color.BLUE);
+        return t;
+    }
+
+    private static Text plainText(String s) {
+        Text t = new Text(s);
+        t.setFont(Font.font("Segoe UI", 14));
+        return t;
     }
 
     private String getPanelSubTitle(int activeStarters) {
@@ -230,35 +285,46 @@ public class HalfTimeDialog extends JDialog {
         return String.format("Player Substitution (Used: %d/3 | Active Players: %d)", totalUsed, activeStarters);
     }
 
-    private void updateComboBoxModels(JComboBox<Player> starterCombo, JComboBox<Player> benchCombo,
+    private void updateComboBoxModels(ComboBox<Player> starterCombo, ComboBox<Player> benchCombo,
                                       List<Player> starters, List<Player> bench, Set<String> yellowCards) {
 
-        starterCombo.setModel(new DefaultComboBoxModel<>(starters.toArray(new Player[0])));
-        benchCombo.setModel(new DefaultComboBoxModel<>(bench.toArray(new Player[0])));
+        starterCombo.setItems(FXCollections.observableArrayList(starters));
+        benchCombo.setItems(FXCollections.observableArrayList(bench));
+        starterCombo.getSelectionModel().selectFirst();
+        benchCombo.getSelectionModel().selectFirst();
 
-        ListCellRenderer<Object> renderer = new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
-                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof Player p) {
-                    String icon = p.getStaminaStatusIcon();
-                    String posTag = "[" + p.getPosition() + "]"; // 📌 แทรกตำแหน่ง [ST], [CB], [GK]
-                    String cardTag = yellowCards.contains(p.getName()) ? " 🟨" : "";
-                    String subbedOutTag = subbedOutPlayers.contains(p) ? " 🚫 [Unavailable]" : "";
+        starterCombo.setCellFactory(lv -> new PlayerCell(yellowCards));
+        starterCombo.setButtonCell(new PlayerCell(yellowCards));
+        benchCombo.setCellFactory(lv -> new PlayerCell(yellowCards));
+        benchCombo.setButtonCell(new PlayerCell(yellowCards));
+    }
 
-                    label.setText(String.format("%s %s %s (Stam: %d/%d)%s%s",
-                            icon, posTag, p.getName(), p.getStamina(), p.getMaxStamina(), cardTag, subbedOutTag));
+    /** แสดงผู้เล่นในคอมโบ: ไอคอนแรง ตำแหน่ง ชื่อ สแตมินา ใบเหลือง และป้ายห้ามใช้ */
+    private class PlayerCell extends ListCell<Player> {
+        private final Set<String> yellowCards;
 
-                    if (subbedOutPlayers.contains(p)) {
-                        label.setForeground(Color.GRAY);
-                    }
-                }
-                return label;
+        PlayerCell(Set<String> yellowCards) {
+            this.yellowCards = yellowCards;
+        }
+
+        @Override
+        protected void updateItem(Player p, boolean empty) {
+            super.updateItem(p, empty);
+            if (empty || p == null) {
+                setText(null);
+                setStyle("");
+                return;
             }
-        };
+            String icon = p.getStaminaStatusIcon();
+            String posTag = "[" + p.getPosition() + "]"; // 📌 แทรกตำแหน่ง [ST], [CB], [GK]
+            String cardTag = yellowCards.contains(p.getName()) ? " 🟨" : "";
+            String subbedOutTag = subbedOutPlayers.contains(p) ? " 🚫 [Unavailable]" : "";
 
-        starterCombo.setRenderer(renderer);
-        benchCombo.setRenderer(renderer);
+            setText(String.format("%s %s %s (Stam: %d/%d)%s%s",
+                    icon, posTag, p.getName(), p.getStamina(), p.getMaxStamina(), cardTag, subbedOutTag));
+
+            setStyle(subbedOutPlayers.contains(p) ? "-fx-text-fill: gray;" : "");
+        }
     }
 
     public TeamSetup getUpdatedTeamSetup() { return updatedTeamSetup; }

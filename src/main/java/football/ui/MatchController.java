@@ -6,13 +6,19 @@ import football.logic.*;
 import football.model.*;
 import football.util.PlayerImageResolver;
 
-import javax.swing.*;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.stage.Stage;
+
 import java.util.*;
 import java.util.List;
 
 /** ควบคุมการจำลองแมตช์: timer, ครึ่งแรก/ครึ่งหลัง, จัดการ event ต่าง ๆ */
 public class MatchController {
-    private final JFrame parent;
+    private final Stage parent;
     private final MatchPanel view;
     private final PopupManager popups;
 
@@ -20,7 +26,7 @@ public class MatchController {
     // ทีมตอนเริ่มแมตช์ (ไม่โดนแก้ระหว่างเกม) ใช้รีเซ็ตเมื่อกด Play Match ซ้ำ
     private TeamSetup homeOriginalSetup, awayOriginalSetup;
     private Match currentMatch;
-    private javax.swing.Timer liveTimer;
+    private UiTimer liveTimer;
     private int currentEventIndex = 0;
     private boolean isSecondHalfRunning = false;
     private List<MatchEvent> h1Events, h2Events;
@@ -35,7 +41,7 @@ public class MatchController {
     // ทุกคนที่เคยถูกเปลี่ยนออก (ไม่ว่าครึ่งแรก/พักครึ่ง/ใบเหลือง) ห้ามเปลี่ยนกลับเข้ามาอีก
     private final Set<Player> subbedOutPlayers = new HashSet<>();
 
-    public MatchController(JFrame parent, MatchPanel view) {
+    public MatchController(Stage parent, MatchPanel view) {
         this.parent = parent;
         this.view = view;
         this.popups = new PopupManager(parent, () -> liveTimer);
@@ -85,6 +91,7 @@ public class MatchController {
     // ===================== MATCH FLOW =====================
 
     public void runMatchSimulation() {
+        SoundManager.stopMenuMusic(); // เริ่มแข่งแล้ว ตัดเพลงให้เสียงเหตุการณ์ในเกมชัด
         if (liveTimer != null && liveTimer.isRunning()) liveTimer.stop();
         resetTeamsForNewMatch();
         view.clearLog();
@@ -109,7 +116,7 @@ public class MatchController {
         currentEventIndex = 0;
         isSecondHalfRunning = false;
 
-        liveTimer = new javax.swing.Timer(1800, e -> {
+        liveTimer = new UiTimer(1800, () -> {
             List<MatchEvent> currentList = isSecondHalfRunning ? h2Events : h1Events;
 
             if (currentList != null && currentEventIndex < currentList.size()) {
@@ -128,6 +135,7 @@ public class MatchController {
         appendColoredLog("");
         appendColoredLog("--- HALF TIME ---");
         appendColoredLog("");
+        SoundManager.play(SoundManager.WHISTLE_HALFTIME);
 
         if (homeTeamSetup != null && homeTeamSetup.getBench() != null) {
             for (Player p : homeTeamSetup.getBench()) p.setStamina(p.getMaxStamina());
@@ -147,8 +155,8 @@ public class MatchController {
         recordSubbedOut(oldAwayStarters, awayTeamSetup.getStarters());
 
         HalfTimeDialog htDialog = new HalfTimeDialog(parent, homeTeamSetup, awayTeamSetup, yellowCardPlayers, unavailableForHome(), homeSubsUsed);
-        htDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-        htDialog.setVisible(true);
+        htDialog.setOnCloseRequest(e -> e.consume()); // ปิดด้วยปุ่ม X ไม่ได้ ต้องกดปุ่มในหน้าต่าง
+        htDialog.showAndWait();
 
         if (htDialog.isConfirmed()) {
             homeSubsUsed = htDialog.getUpdatedSubsUsed();
@@ -176,8 +184,9 @@ public class MatchController {
         liveTimer.stop();
         appendColoredLog("");
         appendColoredLog(String.format("=== FULL TIME: Home %d - %d Away ===", liveHomeGoals, liveAwayGoals));
+        SoundManager.play(SoundManager.WHISTLE_FULLTIME);
         MatchStatistics stats = MatchStatistics.calculate(allMatchEvents);
-        new MatchSummaryDialog(parent, "Home", "Away", liveHomeGoals, liveAwayGoals, stats).setVisible(true);
+        new MatchSummaryDialog(parent, "Home", "Away", liveHomeGoals, liveAwayGoals, stats).showAndWait();
     }
 
     // เล่นคิว Pop-up การเปลี่ยนตัวช่วงพักครึ่งแบบซีเควนซ์ (2 วินาทีต่อ 1 การเปลี่ยนตัว)
@@ -202,7 +211,7 @@ public class MatchController {
         // แสดง Pop-up 2-in-1
         popups.showEventPopupAndWait(new GameEvent.SubstitutionEvent(sub.playerOut, sub.playerIn, PlayerImageResolver.getPlayerImagePath(sub.playerIn), sub.isHome), sub.isHome, false);
 
-        javax.swing.Timer timer = new javax.swing.Timer(2000, e -> {
+        UiTimer timer = new UiTimer(2000, () -> {
             popups.closeCurrentPopup();
             playSubQueue(subs, index + 1, tag, onComplete);
         });
@@ -265,9 +274,10 @@ public class MatchController {
 
         String penaltyAwardLog = String.format("[%d'] %s: PENALTY KICK awarded! 🎯 (Taker: %s)", ev.getMinute(), teamName, playerName);
         appendColoredLog(penaltyAwardLog);
+        SoundManager.play(isHome ? SoundManager.GOAL_CHEER : SoundManager.GOAL_CONCEDED, SoundManager.SOFT_VOLUME);
         popups.showPopup(new GameEvent.PenaltyEvent(playerName, PlayerImageResolver.getPlayerImagePath(playerName), isHome), isHome);
 
-        javax.swing.Timer penaltyResultTimer = new javax.swing.Timer(2000, e1 -> {
+        UiTimer penaltyResultTimer = new UiTimer(2000, () -> {
             popups.closeCurrentPopup();
 
             boolean isGoal = Math.random() < 0.75;
@@ -278,16 +288,20 @@ public class MatchController {
 
                 String goalLog = String.format("[%d'] %s: GOAL! Scored from the penalty spot by %s ⚽", ev.getMinute(), teamName, playerName);
                 appendColoredLog(goalLog);
+                SoundManager.play(isHome ? SoundManager.GOAL_CHEER : SoundManager.GOAL_CONCEDED);
                 popups.showPopup(new GameEvent.GoalEvent(playerName, PlayerImageResolver.getPlayerImagePath(playerName), isHome), isHome);
             } else {
                 TeamSetup defendingTeam = isHome ? awayTeamSetup : homeTeamSetup;
                 String keeperName = findKeeperName(defendingTeam);
                 String saveLog = String.format("[%d'] %s: Penalty shot by %s WAS SAVED by GK %s! 🧤", ev.getMinute(), teamName, playerName, keeperName);
                 appendColoredLog(saveLog);
+                // เราเซฟจุดโทษได้ = เชียร์เต็ม / จุดโทษของเราโดนเซฟ = โห่เบา
+                if (isHome) SoundManager.play(SoundManager.GOAL_CONCEDED, SoundManager.SOFT_VOLUME);
+                else SoundManager.play(SoundManager.GOAL_CHEER);
                 popups.showPopup(new GameEvent.SaveEvent(keeperName, PlayerImageResolver.getPlayerImagePath(keeperName), !isHome), !isHome);
             }
 
-            javax.swing.Timer autoCloseOutcomeTimer = new javax.swing.Timer(2000, e2 -> {
+            UiTimer autoCloseOutcomeTimer = new UiTimer(2000, () -> {
                 popups.closeCurrentPopup();
                 if (liveTimer != null) liveTimer.start();
             });
@@ -304,6 +318,7 @@ public class MatchController {
         updateScoreBoard(ev.getMinute());
 
         String log = String.format("[%d'] %s: %s", ev.getMinute(), teamName, desc.contains("Scored") ? desc : "GOAL! scored by " + playerName + " ⚽");
+        SoundManager.play(isHome ? SoundManager.GOAL_CHEER : SoundManager.GOAL_CONCEDED);
         popups.showEventPopupAndWait(new GameEvent.GoalEvent(playerName, PlayerImageResolver.getPlayerImagePath(playerName), isHome), isHome, true);
         return log;
     }
@@ -316,6 +331,7 @@ public class MatchController {
         String keeperName = findKeeperName(defendingTeam);
 
         String log = String.format("[%d'] %s: %s", ev.getMinute(), teamName, desc.contains("saved") ? desc : "Shot saved by GK " + keeperName + "! 🧤");
+        if (isKeeperHome) SoundManager.play(SoundManager.GOAL_CHEER, SoundManager.SOFT_VOLUME); // ผู้รักษาประตูเราเซฟได้ (ลูกยิงของเราโดนเซฟไม่มีเสียง)
         popups.showEventPopupAndWait(new GameEvent.SaveEvent(keeperName, PlayerImageResolver.getPlayerImagePath(keeperName), isKeeperHome), isKeeperHome, true);
         return log;
     }
@@ -323,6 +339,8 @@ public class MatchController {
     /** @return log ที่ต้องแสดง หรือ null ถ้าแมตช์ถูกปรับแพ้ (ไม่ต้องแสดง log ใบแดงซ้ำ) */
     private String handleRedCard(MatchEvent ev, String desc, String teamName, String playerName, boolean isHome) {
         String log = String.format("[%d'] %s: RED CARD for %s 🟥 (Sent off!)", ev.getMinute(), teamName, playerName);
+        SoundManager.play(SoundManager.WHISTLE_FOUL);
+        if (isHome) SoundManager.playAfter(SoundManager.GOAL_CONCEDED, 600); // โห่เฉพาะใบแดงของฝั่งเรา
         popups.showEventPopupAndWait(new GameEvent.FoulEvent(playerName, PlayerImageResolver.getPlayerImagePath(playerName), true, isHome), isHome, true);
 
         Player p = ev.getPlayer();
@@ -347,9 +365,12 @@ public class MatchController {
             if (liveTimer != null) liveTimer.stop();
             appendColoredLog("");
             appendColoredLog("🚨 MATCH FORFEITED! " + teamName + " RECEIVED 5 RED CARDS!");
-            JOptionPane.showMessageDialog(parent,
-                    "🚨 MATCH FORFEITED!\nทีม " + teamName + " ได้รับใบแดงครบ 5 คน! ถูกปรับแพ้อัตโนมัติ",
-                    "Match Forfeited", JOptionPane.ERROR_MESSAGE);
+            Alert alert = new Alert(Alert.AlertType.ERROR,
+                    "🚨 MATCH FORFEITED!\nทีม " + teamName + " ได้รับใบแดงครบ 5 คน! ถูกปรับแพ้อัตโนมัติ");
+            alert.setTitle("Match Forfeited");
+            alert.setHeaderText(null);
+            alert.initOwner(parent);
+            alert.showAndWait();
             return null;
         }
         return log;
@@ -361,24 +382,25 @@ public class MatchController {
 
         String cardLog = String.format("[%d'] %s: FOUL by %s (YELLOW CARD 🟨)", ev.getMinute(), teamName, playerName);
         appendColoredLog(cardLog);
+        SoundManager.play(SoundManager.WHISTLE_FOUL);
 
         if (liveTimer != null) liveTimer.stop();
 
         popups.showPopup(new GameEvent.FoulEvent(playerName, PlayerImageResolver.getPlayerImagePath(playerName), false, isHome), isHome);
 
-        javax.swing.Timer ycTimer = new javax.swing.Timer(2000, e -> {
+        UiTimer ycTimer = new UiTimer(2000, () -> {
             popups.closeCurrentPopup();
 
             if (isHome && p != null) {
-                int choice = JOptionPane.showConfirmDialog(
-                        parent,
+                Alert confirm = new Alert(Alert.AlertType.WARNING,
                         "🟨 นักเตะ " + playerName + " ได้รับใบเหลือง!\nต้องการหยุดเกมเพื่อเปลี่ยนตัวออกทันทีหรือไม่?",
-                        "Yellow Card Pause",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE
-                );
+                        ButtonType.YES, ButtonType.NO);
+                confirm.setTitle("Yellow Card Pause");
+                confirm.setHeaderText(null);
+                confirm.initOwner(parent);
+                boolean wantsSub = confirm.showAndWait().filter(b -> b == ButtonType.YES).isPresent();
 
-                if (choice == JOptionPane.YES_OPTION) {
+                if (wantsSub) {
                     openMidMatchSubDialog();
                 } else {
                     if (liveTimer != null) liveTimer.start();
@@ -429,11 +451,11 @@ public class MatchController {
 
         HalfTimeDialog subDialog = new HalfTimeDialog(parent, homeTeamSetup, awayTeamSetup, yellowCardPlayers, unavailableForHome(), homeSubsUsed);
         subDialog.setTitle("Tactical Change / Substitution");
-        subDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        subDialog.setOnCloseRequest(e -> e.consume()); // ปิดด้วยปุ่ม X ไม่ได้ ต้องกดปุ่มในหน้าต่าง
 
-        changeButtonTextInDialog(subDialog, "Resume");
+        changeButtonTextInDialog(subDialog.getScene().getRoot(), "Resume");
 
-        subDialog.setVisible(true);
+        subDialog.showAndWait();
 
         if (subDialog.isConfirmed()) {
             homeSubsUsed = subDialog.getUpdatedSubsUsed();
@@ -457,16 +479,16 @@ public class MatchController {
         }
     }
 
-    private void changeButtonTextInDialog(java.awt.Container container, String newText) {
-        for (java.awt.Component c : container.getComponents()) {
-            if (c instanceof JButton) {
-                JButton btn = (JButton) c;
+    private void changeButtonTextInDialog(Parent container, String newText) {
+        for (Node c : container.getChildrenUnmodifiable()) {
+            if (c instanceof Button) {
+                Button btn = (Button) c;
                 String text = btn.getText();
                 if (text != null && (text.toLowerCase().contains("start") || text.toLowerCase().contains("half") || text.toLowerCase().contains("confirm"))) {
                     btn.setText(newText);
                 }
-            } else if (c instanceof java.awt.Container) {
-                changeButtonTextInDialog((java.awt.Container) c, newText);
+            } else if (c instanceof Parent) {
+                changeButtonTextInDialog((Parent) c, newText);
             }
         }
     }

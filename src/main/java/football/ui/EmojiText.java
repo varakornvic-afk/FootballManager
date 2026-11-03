@@ -1,36 +1,37 @@
 package football.ui;
 
-import javax.swing.*;
-import java.awt.*;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * ข้อความที่มีอีโมจิปนกับตัวอักษร
- * แยกเป็นหลาย JLabel (ตัวอักษรใช้ฟอนต์ที่กำหนด / อีโมจิใช้ฟอนต์ Dialog)
- * เพราะ JLabel เดียวที่ผสมอีโมจิกับตัวอักษรอาจวาดตัวอักษรหายบางเครื่อง (เช่น macOS)
+ * แยกเป็นหลาย Label (ตัวอักษรใช้ฟอนต์ที่กำหนด / อีโมจิใช้ฟอนต์ระบบ)
+ * เพื่อไม่ให้ตัวอักษรหายเวลาปนกับอีโมจิบางเครื่อง (เช่น macOS)
  */
-public class EmojiText extends JPanel {
+public class EmojiText extends HBox {
 
     public EmojiText(String text, Font textFont, Color color) {
-        super(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        setOpaque(false);
-        setAlignmentX(Component.CENTER_ALIGNMENT);
+        super(0);
+        setAlignment(Pos.CENTER);
 
-        Font emojiFont = new Font(Font.DIALOG, Font.PLAIN, textFont.getSize());
+        Font emojiFont = Font.font(textFont.getSize());
 
         for (Segment seg : split(text == null ? "" : text)) {
-            JLabel label = new JLabel(seg.text);
+            Label label = new Label(seg.text);
             label.setFont(seg.emoji ? emojiFont : textFont);
-            label.setForeground(color);
-            add(label);
+            label.setTextFill(color);
+            getChildren().add(label);
         }
-
-        // กันไม่ให้ถูกยืดสูงใน BoxLayout แนวตั้ง
-        setMaximumSize(new Dimension(Short.MAX_VALUE, getPreferredSize().height));
     }
 
-    private static class Segment {
+    /** ส่วนของข้อความ: อีโมจิหรือตัวอักษร (ใช้ร่วมกับ MatchPanel) */
+    static class Segment {
         final String text;
         final boolean emoji;
 
@@ -40,7 +41,7 @@ public class EmojiText extends JPanel {
         }
     }
 
-    private static List<Segment> split(String text) {
+    static List<Segment> split(String text) {
         List<Segment> segments = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean currentIsEmoji = false;

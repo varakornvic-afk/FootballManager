@@ -1,42 +1,53 @@
 package football.ui;
 
 import football.event.GameEvent;
-import javax.swing.*;
-import java.awt.*;
+import javafx.animation.PauseTransition;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.BorderStrokeStyle;
+import javafx.scene.layout.BorderWidths;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
+
 import java.net.URL;
 
-public class EventPopupDialog extends JDialog {
+public class EventPopupDialog extends Stage {
     private static final int IMG_BOX_W = 220;
     private static final int IMG_BOX_H = 270;
 
-    public EventPopupDialog(JFrame parent, GameEvent ev, boolean isHomeTeam) {
-        super(parent, false);
-        setUndecorated(true);
+    public EventPopupDialog(Stage parent, GameEvent ev, boolean isHomeTeam) {
+        initOwner(parent);
+        initModality(Modality.NONE);
+        initStyle(StageStyle.UNDECORATED);
 
         // กำหนดสีพื้นหลังและข้อความระบุฝั่ง
-        Color bgColor = isHomeTeam ? new Color(15, 35, 60) : new Color(60, 20, 20); // ฟ้าเข้ม vs แดงเข้ม
-
-        JPanel p = new JPanel();
-        p.setLayout(new BoxLayout(p, BoxLayout.Y_AXIS));
-        p.setBackground(bgColor);
-        p.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(ev.getThemeColor(), 4),
-                BorderFactory.createEmptyBorder(20, 35, 20, 35)
-        ));
+        Color bgColor = isHomeTeam ? Color.rgb(15, 35, 60) : Color.rgb(60, 20, 20); // ฟ้าเข้ม vs แดงเข้ม
+        Color themeColor = ev.getThemeColor();
 
         // 1. หัวข้อ Event (event สร้างข้อความที่มีฝั่งทีมมาให้แล้ว เช่น ⚽ GOAL! Your Team)
         EmojiText lblTitle = new EmojiText(ev.getEventTitle(isHomeTeam),
-                new Font("Segoe UI", Font.BOLD, 24), ev.getThemeColor());
+                Font.font("Segoe UI", FontWeight.BOLD, 24), themeColor);
 
         // 2. รูปนักเตะ (กรอบ 220x270px แต่รักษาสัดส่วนภาพ ไม่ยืด)
-        JLabel lblImg = new JLabel();
-        lblImg.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblImg.setHorizontalAlignment(SwingConstants.CENTER);
-        lblImg.setVerticalAlignment(SwingConstants.CENTER);
-        Dimension imgBox = new Dimension(IMG_BOX_W, IMG_BOX_H);
-        lblImg.setPreferredSize(imgBox);
-        lblImg.setMinimumSize(imgBox);
-        lblImg.setMaximumSize(imgBox);
+        StackPane imgBox = new StackPane();
+        imgBox.setPrefSize(IMG_BOX_W, IMG_BOX_H);
+        imgBox.setMinSize(IMG_BOX_W, IMG_BOX_H);
+        imgBox.setMaxSize(IMG_BOX_W, IMG_BOX_H);
 
         String imgPath = ev.getImagePath();
         if (imgPath != null) {
@@ -51,39 +62,49 @@ public class EventPopupDialog extends JDialog {
             // ดึงไฟล์รูปจากในไฟล์ JAR ผ่าน Classpath
             URL imgUrl = getClass().getResource(imgPath);
             if (imgUrl != null) {
-                ImageIcon original = new ImageIcon(imgUrl);
-                int w = original.getIconWidth();
-                int h = original.getIconHeight();
-                if (w > 0 && h > 0) {
-                    // ย่อ/ขยายให้พอดีกรอบ โดยคูณทั้งกว้างและสูงด้วยอัตราเดียวกัน
-                    double scale = Math.min((double) IMG_BOX_W / w, (double) IMG_BOX_H / h);
-                    int drawW = Math.max(1, (int) Math.round(w * scale));
-                    int drawH = Math.max(1, (int) Math.round(h * scale));
-                    Image img = original.getImage().getScaledInstance(drawW, drawH, Image.SCALE_SMOOTH);
-                    lblImg.setIcon(new ImageIcon(img));
+                Image img = new Image(imgUrl.toExternalForm());
+                if (!img.isError()) {
+                    ImageView view = new ImageView(img);
+                    view.setFitWidth(IMG_BOX_W);
+                    view.setFitHeight(IMG_BOX_H);
+                    view.setPreserveRatio(true); // ย่อ/ขยายให้พอดีกรอบ โดยใช้อัตราเดียวกันทั้งกว้างและสูง
+                    view.setSmooth(true);
+                    imgBox.getChildren().add(view);
                 }
             }
         }
 
         // 3. ชื่อนักเตะ
         EmojiText lblName = new EmojiText(ev.getPlayerName(),
-                new Font("Segoe UI", Font.BOLD, 22), Color.WHITE);
+                Font.font("Segoe UI", FontWeight.BOLD, 22), Color.WHITE);
 
-        p.add(lblTitle); p.add(Box.createVerticalStrut(12));
-        p.add(lblImg);   p.add(Box.createVerticalStrut(12));
-        p.add(lblName);
+        VBox root = new VBox(12, lblTitle, imgBox, lblName);
+        root.setAlignment(Pos.CENTER);
+        root.setPadding(new Insets(20, 35, 20, 35));
+        root.setBackground(new Background(new BackgroundFill(bgColor, CornerRadii.EMPTY, Insets.EMPTY)));
+        root.setBorder(new Border(new BorderStroke(themeColor, BorderStrokeStyle.SOLID,
+                CornerRadii.EMPTY, new BorderWidths(4))));
 
-        add(p);
-        pack();
-        setLocationRelativeTo(parent);
+        setScene(new Scene(root));
 
-        // 🔥 เพิ่มเวลาค้างแสดงผลเป็น 3.5 วินาที (3500 ms) และปิดการทำซ้ำ (repeats = false)
-        Timer timer = new Timer(3500, e -> dispose());
-        timer.setRepeats(false); // 📌 ป้องกัน Timer ทำงานซ้ำซ้อน
-        timer.start();
+        // วางไว้กลางหน้าต่างหลัก (รู้ขนาดจริงหลังแสดงแล้ว)
+        setOnShown(e -> {
+            if (parent != null) {
+                setX(parent.getX() + (parent.getWidth() - getWidth()) / 2);
+                setY(parent.getY() + (parent.getHeight() - getHeight()) / 2);
+            }
+        });
     }
 
-    public static void showPopup(JFrame parent, GameEvent ev, boolean isHomeTeam) {
-        new EventPopupDialog(parent, ev, isHomeTeam).setVisible(true);
+    /** แสดง popup แบบไม่บล็อก แล้วปิดเองหลัง 3.5 วินาที */
+    public static EventPopupDialog showPopup(Stage parent, GameEvent ev, boolean isHomeTeam) {
+        EventPopupDialog dialog = new EventPopupDialog(parent, ev, isHomeTeam);
+        dialog.show();
+
+        // 🔥 ค้างแสดงผล 3.5 วินาที (3500 ms)
+        PauseTransition autoClose = new PauseTransition(Duration.millis(3500));
+        autoClose.setOnFinished(e -> dialog.close());
+        autoClose.play();
+        return dialog;
     }
 }

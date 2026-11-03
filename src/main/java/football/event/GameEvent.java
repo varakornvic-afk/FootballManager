@@ -1,6 +1,6 @@
 package football.event;
 
-import java.awt.Color;
+import javafx.scene.paint.Color;
 
 public interface GameEvent {
     String getEventTitle();
@@ -56,7 +56,7 @@ public interface GameEvent {
         }
 
         @Override
-        public Color getThemeColor() { return new Color(40, 167, 69); } // สีเขียว
+        public Color getThemeColor() { return Color.rgb(40, 167, 69); } // สีเขียว
     }
 
     // 🟨🟥 2. Popup ตอนฟาล์ว (ใบเหลือง / ใบแดง)
@@ -91,7 +91,7 @@ public interface GameEvent {
 
         @Override
         public Color getThemeColor() {
-            return isRed ? new Color(220, 53, 69) : new Color(255, 193, 7); // ใบแดงสีแดง / ใบเหลืองสีเหลือง
+            return isRed ? Color.rgb(220, 53, 69) : Color.rgb(255, 193, 7); // ใบแดงสีแดง / ใบเหลืองสีเหลือง
         }
     }
 
@@ -113,7 +113,7 @@ public interface GameEvent {
         }
 
         @Override
-        public Color getThemeColor() { return new Color(23, 162, 184); } // สีฟ้า Cyan
+        public Color getThemeColor() { return Color.rgb(23, 162, 184); } // สีฟ้า Cyan
     }
 
     // 🎯 4. Popup ตอนได้จุดโทษ
@@ -133,7 +133,7 @@ public interface GameEvent {
         }
 
         @Override
-        public Color getThemeColor() { return new Color(153, 102, 255); } // สีม่วง
+        public Color getThemeColor() { return Color.rgb(153, 102, 255); } // สีม่วง
     }
 
     // 🔄 5. Popup ตอนเปลี่ยนตัวแบบ 2-in-1 (Sub Out & Sub In)
@@ -174,6 +174,6 @@ public interface GameEvent {
         }
 
         @Override
-        public Color getThemeColor() { return new Color(255, 140, 0); } // สีส้ม
+        public Color getThemeColor() { return Color.rgb(255, 140, 0); } // สีส้ม
     }
 }

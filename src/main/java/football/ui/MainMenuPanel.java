@@ -1,107 +1,96 @@
 package football.ui;
 
-import javax.imageio.ImageIO;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.image.BufferedImage;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundRepeat;
+import javafx.scene.layout.BackgroundSize;
+import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+
 import java.io.IOException;
 import java.io.InputStream;
 
-public class MainMenuPanel extends JPanel {
+public class MainMenuPanel extends StackPane {
     private static final String BACKGROUND_PATH = "/image/menu_bg.png";
 
-    private final Image background;
-
     public MainMenuPanel(Runnable onStart) {
-        super(new GridBagLayout());
-        setBackground(new Color(30, 40, 50));
-        background = loadBackground();
+        Color baseColor = Color.rgb(30, 40, 50);
+        Image background = loadBackground();
 
-        JButton startButton = new JButton("Start Game");
-        JButton exitButton = new JButton("Exit");
-        startButton.addActionListener(e -> onStart.run());
-        exitButton.addActionListener(e -> System.exit(0));
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
+        Button startButton = new Button("Start Game");
+        Button exitButton = new Button("Exit");
+        startButton.setOnAction(e -> onStart.run());
+        exitButton.setOnAction(e -> Platform.exit());
 
         if (background == null) {
             // ไม่เจอไฟล์ภาพ: ใช้หน้าตาเดิม (พื้นสีเข้ม + ชื่อเกม + ปุ่ม)
-            gbc.insets = new Insets(10, 10, 10, 10);
+            setBackground(new Background(new BackgroundFill(baseColor, CornerRadii.EMPTY, Insets.EMPTY)));
 
-            JLabel titleLabel = new JLabel("TACTIX FOOTBALL");
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 28));
-            titleLabel.setForeground(Color.WHITE);
-            add(titleLabel, gbc);
+            Label titleLabel = new Label("TACTIX FOOTBALL");
+            titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
+            titleLabel.setTextFill(Color.WHITE);
 
-            gbc.gridy = 1; add(startButton, gbc);
-            gbc.gridy = 2; add(exitButton, gbc);
+            VBox box = new VBox(10, titleLabel, startButton, exitButton);
+            box.setAlignment(Pos.CENTER);
+            getChildren().add(box);
+            addSoundButton();
         } else {
+            // ขยายภาพให้เต็มพื้นที่ โดยรักษาสัดส่วน (ส่วนที่เกินจะถูกตัดออก)
+            BackgroundImage bgImage = new BackgroundImage(background,
+                    BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT,
+                    BackgroundPosition.CENTER,
+                    new BackgroundSize(1.0, 1.0, true, true, false, true));
+            setBackground(new Background(
+                    new BackgroundFill[]{new BackgroundFill(baseColor, CornerRadii.EMPTY, Insets.EMPTY)},
+                    new BackgroundImage[]{bgImage}));
+
             // มีภาพพื้นหลัง: ดันปุ่มไปไว้ช่วงล่างของหน้าต่าง ไม่บังโลโก้และนักเตะตรงกลาง
-            startButton.setPreferredSize(new Dimension(200, 40));
-            exitButton.setPreferredSize(new Dimension(200, 40));
+            startButton.setPrefSize(200, 40);
+            exitButton.setPrefSize(200, 40);
 
-            TranslucentPanel buttonPanel = new TranslucentPanel();
-            buttonPanel.add(startButton);
-            buttonPanel.add(exitButton);
+            // แผ่นดำโปร่งใสมุมมน วางหลังปุ่มให้อ่านง่ายบนภาพ
+            VBox buttonPanel = new VBox(12, startButton, exitButton);
+            buttonPanel.setAlignment(Pos.CENTER);
+            buttonPanel.setPadding(new Insets(18, 40, 18, 40));
+            buttonPanel.setBackground(new Background(new BackgroundFill(
+                    Color.rgb(0, 0, 0, 150 / 255.0), new CornerRadii(18), Insets.EMPTY)));
+            buttonPanel.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-            gbc.gridy = 0;
-            gbc.weighty = 1.0;
-            gbc.anchor = GridBagConstraints.SOUTH;
-            gbc.insets = new Insets(0, 0, 40, 0);
-            add(buttonPanel, gbc);
+            StackPane.setAlignment(buttonPanel, Pos.BOTTOM_CENTER);
+            StackPane.setMargin(buttonPanel, new Insets(0, 0, 40, 0));
+            getChildren().add(buttonPanel);
+            addSoundButton();
         }
+    }
+
+    /** ปุ่มเปิด/ปิดเสียงมุมขวาบน */
+    private void addSoundButton() {
+        SoundToggleButton soundButton = new SoundToggleButton();
+        StackPane.setAlignment(soundButton, Pos.TOP_RIGHT);
+        StackPane.setMargin(soundButton, new Insets(15));
+        getChildren().add(soundButton);
     }
 
     private static Image loadBackground() {
         try (InputStream in = MainMenuPanel.class.getResourceAsStream(BACKGROUND_PATH)) {
             if (in == null) return null;
-            BufferedImage img = ImageIO.read(in);
-            return img;
+            Image img = new Image(in);
+            return img.isError() ? null : img;
         } catch (IOException e) {
             return null;
-        }
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (background == null) return;
-
-        int imgW = background.getWidth(null);
-        int imgH = background.getHeight(null);
-        if (imgW <= 0 || imgH <= 0) return;
-
-        // ขยายให้เต็มพื้นที่ โดยรักษาสัดส่วนภาพ (ส่วนที่เกินจะถูกตัดออกด้านข้างหรือด้านบน-ล่าง)
-        double scale = Math.max((double) getWidth() / imgW, (double) getHeight() / imgH);
-        int drawW = (int) Math.ceil(imgW * scale);
-        int drawH = (int) Math.ceil(imgH * scale);
-        int x = (getWidth() - drawW) / 2;
-        int y = (getHeight() - drawH) / 2;
-
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-        g2.drawImage(background, x, y, drawW, drawH, null);
-        g2.dispose();
-    }
-
-    /** แผ่นดำโปร่งใสมุมมน วางหลังปุ่มให้อ่านง่ายบนภาพ */
-    private static class TranslucentPanel extends JPanel {
-        TranslucentPanel() {
-            super(new GridLayout(0, 1, 0, 12));
-            setOpaque(false);
-            setBorder(BorderFactory.createEmptyBorder(18, 40, 18, 40));
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2.setColor(new Color(0, 0, 0, 150));
-            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
-            g2.dispose();
-            super.paintComponent(g);
         }
     }
 }

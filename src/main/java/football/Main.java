@@ -1,13 +1,14 @@
 package football;
 
 import football.ui.MainFrame;
-import javax.swing.*;
+import javafx.application.Application;
 
+/**
+ * จุดเริ่มโปรแกรม
+ * แยกออกจาก MainFrame (ที่ extends Application) เพื่อให้รันจากไฟล์ .jar ได้
+ */
 public class Main {
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            MainFrame frame = new MainFrame();
-            frame.setVisible(true);
-        });
+        Application.launch(MainFrame.class, args);
     }
 }
