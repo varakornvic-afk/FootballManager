@@ -39,7 +39,7 @@ public class EventPopupDialog extends Stage {
         Color bgColor = isHomeTeam ? Color.rgb(15, 35, 60) : Color.rgb(60, 20, 20); // ฟ้าเข้ม vs แดงเข้ม
         Color themeColor = ev.getThemeColor();
 
-        // 1. หัวข้อ Event (event สร้างข้อความที่มีฝั่งทีมมาให้แล้ว เช่น ⚽ GOAL! Your Team)
+        // 1. หัวข้อ Event (event สร้างข้อความที่มีฝั่งทีมมาให้แล้ว เช่น GOAL! Your Team)
         EmojiText lblTitle = new EmojiText(ev.getEventTitle(isHomeTeam),
                 Font.font("Segoe UI", FontWeight.BOLD, 24), themeColor);
 
@@ -101,7 +101,7 @@ public class EventPopupDialog extends Stage {
         EventPopupDialog dialog = new EventPopupDialog(parent, ev, isHomeTeam);
         dialog.show();
 
-        // 🔥 ค้างแสดงผล 3.5 วินาที (3500 ms)
+        // ค้างแสดงผล 3.5 วินาที (3500 ms)
         PauseTransition autoClose = new PauseTransition(Duration.millis(3500));
         autoClose.setOnFinished(e -> dialog.close());
         autoClose.play();

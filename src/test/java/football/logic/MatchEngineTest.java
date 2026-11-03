@@ -47,29 +47,14 @@ class MatchEngineTest {
         TeamSetup away = createTeam("A", new Possession());
 
         MatchEngine engine1 = new MatchEngine(12345L);
-        MatchHalfResult result1 = engine1.simulatePeriod(1, 1, 45, home, away);
+        MatchHalfResult result1 = engine1.simulatePeriod(1, 45, home, away);
 
         MatchEngine engine2 = new MatchEngine(12345L);
-        MatchHalfResult result2 = engine2.simulatePeriod(1, 1, 45, home, away);
+        MatchHalfResult result2 = engine2.simulatePeriod(1, 45, home, away);
 
         assertAll("Deterministic Results Match",
                 () -> assertEquals(result1.getHomeGoals(), result2.getHomeGoals(), "Home goals should match"),
-                () -> assertEquals(result1.getAwayGoals(), result2.getAwayGoals(), "Away goals should match"),
                 () -> assertEquals(result1.getEvents().size(), result2.getEvents().size(), "Event count should match")
         );
-    }
-
-    @Test
-    @DisplayName("MatchHalfResult บันทึกหมายเลขครึ่งเวลาได้อย่างถูกต้อง")
-    void periodResultStoresCorrectPeriodNumber() {
-        TeamSetup home = createTeam("H", new CounterAttack());
-        TeamSetup away = createTeam("A", new Possession());
-        MatchEngine engine = new MatchEngine(42L);
-
-        MatchHalfResult p1 = engine.simulatePeriod(1, 1, 45, home, away);
-        MatchHalfResult p2 = engine.simulatePeriod(2, 46, 90, home, away);
-
-        assertEquals(1, p1.getPeriodNumber());
-        assertEquals(2, p2.getPeriodNumber());
     }
 }

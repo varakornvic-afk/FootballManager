@@ -3,6 +3,7 @@ package football.logic;
 import football.model.*;
 import football.util.PlayerRepository;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -33,6 +34,23 @@ public final class TeamSetupFactory {
         List<Player> all = PlayerRepository.loadPlayersFromCSV("players.csv");
         Collections.shuffle(all);
 
+        // ตัวจริงต้องมี GK พอดี 1 คน จึงเลือก GK ก่อนแล้วค่อยสุ่มนักเตะสนามอีก 10 คน
+        Player keeper = all.stream()
+                .filter(p -> p.getPosition() == Position.GK)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("players.csv has no goalkeeper"));
+        List<Player> others = new ArrayList<>(all);
+        others.remove(keeper);
+
+        List<Player> starters = new ArrayList<>();
+        starters.add(keeper);
+        for (Player p : others) {
+            if (starters.size() == TeamSetup.LINEUP_SIZE) break;
+            if (p.getPosition() != Position.GK) starters.add(p);
+        }
+        others.removeAll(starters);
+        List<Player> bench = new ArrayList<>(others.subList(0, 5));
+
         Random rand = new Random();
         Tactic[] availableTactics = new Tactic[]{ new Possession(), new CounterAttack(), new WidePlay() };
         Formation[] availableFormations = new Formation[]{ new Formation442(), new Formation433(), new Formation343(), new Formation532() };
@@ -43,6 +61,6 @@ public final class TeamSetupFactory {
         Stance randomAwayStance = availableStances[rand.nextInt(availableStances.length)];
 
         return TeamSetup.create(randomAwayTactic, randomAwayForm, randomAwayStance,
-                all.subList(0, 11), all.subList(11, 16));
+                starters, bench);
     }
 }

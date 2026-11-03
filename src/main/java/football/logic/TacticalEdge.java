@@ -10,13 +10,13 @@ import java.util.function.ToIntFunction;
 
 /**
  * ผลได้เปรียบ/เสียเปรียบทางแทคติกของ "ทีมหนึ่ง" เมื่อเจอกับอีกทีม (หน่วยเป็นสัดส่วน เช่น 0.04 = 4 จุดเปอร์เซ็นต์)
- * แยกเป็นองค์ประกอบ เพื่อให้ MatchEngine รวมเป็นโอกาสในแมตช์ และให้ UI ดึง bonuses() ไปแสดงได้
+ * แยกเป็นองค์ประกอบ เพื่อให้ MatchEngine รวมเป็นโอกาสในแมตช์
  *
  * องค์ประกอบทั้งหมดคิดจากฝั่งตัวเองเทียบกับค่ากลาง จึงลบกันระหว่างสองทีมได้ผลที่สมมาตรกันเสมอ
  */
 public final class TacticalEdge {
 
-    // ===== น้ำหนัก (ปรับจูนได้ที่นี่) =====
+    // น้ำหนัก (ปรับจูนได้ที่นี่)
     static final double TACTIC_WIN_SHARE = 0.04;        // ชนะทางแผน; ฝั่งแพ้เสีย TACTIC_WIN_SHARE x exposure ของฟอร์เมชัน
     static final double CONTROL_SHARE_PER_POINT = 0.01; // ต่อ 1 แต้ม control ที่เกิน/ขาดจากค่ากลาง
     static final int NEUTRAL_CONTROL = 5;
@@ -30,7 +30,7 @@ public final class TacticalEdge {
     static final double OUT_OF_POSITION_CROSS_GROUP = 0.01; // ลงข้ามกลุ่ม (เช่น ST แทน CB)
     static final double OUT_OF_POSITION_MAX = 0.05;
 
-    // ----- คู่ปะทะตามตำแหน่ง (ฝ่ายบุกของเรา vs ฝ่ายรับของอีกทีม) -----
+    // คู่ปะทะตามตำแหน่ง (ฝ่ายบุกของเรา vs ฝ่ายรับของอีกทีม)
     static final double DUEL_SHARE_PER_POINT = 0.015;   // ต่อ 1 แต้มส่วนต่างค่าพลัง
     static final double DUEL_MAX = 0.03;                // เพดานต่อคู่
     static final double DUELS_TOTAL_MAX = 0.06;         // เพดานรวมทุกคู่
@@ -38,19 +38,6 @@ public final class TacticalEdge {
     static final double NEUTRAL_ST_CB = 0.5;            // (Pace ST - Pace CB + Heading ST - Heading CB) / 2
     static final double NEUTRAL_FW_FB = -0.25;          // Pace FW - Pace FB
     static final double NEUTRAL_MW_MF = 1.0;            // Passing MW - Defense MF
-
-    /** ฟอร์เมชันที่ fitFor ถึงค่านี้ถือว่า "ถนัดแผน" (ใช้ตัดสินว่าจะแสดงเป็นโบนัสให้ผู้เล่นเห็นไหม) */
-    static final double SPECIALIST_THRESHOLD = 1.10;
-    /** โบนัสที่เล็กกว่านี้ไม่แสดงให้ผู้เล่นเห็น */
-    static final double MIN_DISPLAY = 0.005;
-
-    /** โบนัสหนึ่งรายการที่ผู้เล่นควรเห็น เช่น ("Counter Attack beats Possession", 0.04) */
-    public record Bonus(String label, double points) {
-        /** ข้อความสั้นสำหรับ UI เช่น "+4%" */
-        public String percentText() {
-            return String.format("+%d%%", Math.round(points * 100));
-        }
-    }
 
     private final double tacticMatchup;
     private final double formationControl;
@@ -61,11 +48,10 @@ public final class TacticalEdge {
     private final double manCount;
     private final double fatigue;       // ค่าลบเสมอ (หรือ 0)
     private final double outOfPosition; // ค่าลบเสมอ (หรือ 0)
-    private final List<Bonus> bonuses;
 
     private TacticalEdge(double tacticMatchup, double formationControl, double formationFit,
                          double squadFit, double duels, double stance, double manCount,
-                         double fatigue, double outOfPosition, List<Bonus> bonuses) {
+                         double fatigue, double outOfPosition) {
         this.tacticMatchup = tacticMatchup;
         this.formationControl = formationControl;
         this.formationFit = formationFit;
@@ -75,7 +61,6 @@ public final class TacticalEdge {
         this.manCount = manCount;
         this.fatigue = fatigue;
         this.outOfPosition = outOfPosition;
-        this.bonuses = List.copyOf(bonuses);
     }
 
     /** คำนวณผลของ team เมื่อเจอ opponent */
@@ -98,21 +83,10 @@ public final class TacticalEdge {
         double fatigue = (Fatigue.averageFactor(team) - 1.0) * FATIGUE_SHARE;
         double position = -outOfPositionPenalty(team);
 
-        List<Bonus> bonuses = new ArrayList<>();
-        if (matchup >= MIN_DISPLAY) {
-            bonuses.add(new Bonus(tactic.getName() + " beats " + opposing.getName(), matchup));
-        }
-        if (fitFor >= SPECIALIST_THRESHOLD && formationFit >= MIN_DISPLAY) {
-            bonuses.add(new Bonus(formation.getName() + " suits " + tactic.getName(), formationFit));
-        }
-        if (squadFit >= MIN_DISPLAY) {
-            bonuses.add(new Bonus("Lineup fits " + tactic.getName(), squadFit));
-        }
-
-        return new TacticalEdge(matchup, control, formationFit, squadFit, duels, stance, men, fatigue, position, bonuses);
+        return new TacticalEdge(matchup, control, formationFit, squadFit, duels, stance, men, fatigue, position);
     }
 
-    // ----- การเข้าถึงแต่ละองค์ประกอบ (ใช้ในเทสต์และ UI) -----
+    // การเข้าถึงแต่ละองค์ประกอบ (ใช้ในเทสต์และ UI)
     public double tacticMatchup() { return tacticMatchup; }
     public double formationControl() { return formationControl; }
     public double formationFit() { return formationFit; }
@@ -128,12 +102,7 @@ public final class TacticalEdge {
                 + stance + manCount + fatigue + outOfPosition;
     }
 
-    /** โบนัสจากการเลือกแผน/ฟอร์เมชัน/ตัว ที่ผู้เล่นควรเห็น (เฉพาะรายการที่เป็นบวก) */
-    public List<Bonus> bonuses() {
-        return bonuses;
-    }
-
-    // ===================== คู่ปะทะตามตำแหน่ง =====================
+    // คู่ปะทะตามตำแหน่ง
 
     /**
      * ฝ่ายบุกของ team สู้ฝ่ายรับของ opponent (ใช้ตำแหน่งจริงของตัวจริงที่ลงสนาม)
@@ -188,7 +157,7 @@ public final class TacticalEdge {
         return total / players.size();
     }
 
-    // ===================== ตัวช่วยคำนวณ =====================
+    // ตัวช่วยคำนวณ
 
     /**
      * ความเข้ากับแผนของ "ตัวจริง" เทียบกับ "ทั้งทีม (ตัวจริง + ตัวสำรอง)" ไม่นับ GK

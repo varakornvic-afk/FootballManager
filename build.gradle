@@ -16,6 +16,15 @@ javafx {
     modules = ['javafx.controls', 'javafx.media']
 }
 
+// รวม native ของ JavaFX ทุกระบบเข้า jar (Windows, Linux, macOS Intel/Apple Silicon)
+// เพื่อให้ java -jar รันได้บนเครื่องที่ไม่ใช่เครื่องที่ build
+def fxVersion = javafx.version
+['win', 'linux', 'mac', 'mac-aarch64'].each { platform ->
+    ['base', 'graphics', 'controls', 'media'].each { module ->
+        dependencies.add('runtimeOnly', "org.openjfx:javafx-${module}:${fxVersion}:${platform}")
+    }
+}
+
 dependencies {
     testImplementation platform('org.junit:junit-bom:5.10.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -28,11 +37,11 @@ test {
 }
 
 jar {
-    archiveFileName = 'FootballManager.jar'
+    archiveFileName = 'FootballTactix.jar'
     manifest {
         attributes 'Main-Class': 'football.Main'
     }
-    // รวม JavaFX เข้าไปใน jar เดียว เพื่อให้ java -jar FootballManager.jar รันได้
+    // รวม JavaFX เข้าไปใน jar เดียว เพื่อให้ java -jar FootballTactix.jar รันได้
     // (Main ไม่ได้ extends Application จึงไม่ติดปัญหา "JavaFX runtime components are missing")
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from {

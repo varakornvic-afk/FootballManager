@@ -17,7 +17,7 @@ public class MainFrame extends Application {
 
     @Override
     public void start(Stage stage) {
-        stage.setTitle("Tactix Football");
+        stage.setTitle("FootballTactix");
         stage.setOnCloseRequest(e -> Platform.exit());
 
         matchPanel = new MatchPanel(

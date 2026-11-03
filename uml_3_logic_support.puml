@@ -1,0 +1,39 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+class football.logic.AwayTeamAI {
+- <<Create>> AwayTeamAI()
++ {static} TeamSetup adaptAtHalftime(TeamSetup,int,int,int)
++ {static} Player findCardReplacement(TeamSetup,Player)
++ {static} TeamSetup applySubstitution(TeamSetup,Player,Player)
+}
+
+class football.logic.TeamSetupFactory {
+- <<Create>> TeamSetupFactory()
++ {static} TeamSetup createHome(String,String,List<Player>,List<Player>)
++ {static} TeamSetup createRandomAway()
+}
+
+class football.logic.SubstitutionDetector {
+- <<Create>> SubstitutionDetector()
++ {static} List<SubInfo> detect(List<Player>,List<Player>,boolean)
+}
+
+class football.logic.SubInfo {
++ String playerOut
++ String playerIn
++ boolean isHome
++ <<Create>> SubInfo(String,String,boolean)
+}
+
+class football.model.TeamSetup
+class football.model.Player
+
+football.logic.AwayTeamAI ..> football.model.TeamSetup
+football.logic.AwayTeamAI ..> football.model.Player
+football.logic.TeamSetupFactory ..> football.model.TeamSetup
+football.logic.SubstitutionDetector ..> football.logic.SubInfo
+football.logic.SubstitutionDetector ..> football.model.Player
+@enduml

@@ -46,23 +46,20 @@ public class MatchEngine {
     }
 
     /** จำลองการแข่งขันตามช่วงเวลา (Period) และคืนค่าผลการแข่งขันครึ่งนั้นๆ เป็น MatchHalfResult */
-    public MatchHalfResult simulatePeriod(int periodNumber, int startMinute, int endMinute, TeamSetup homeTeam, TeamSetup awayTeam) {
+    public MatchHalfResult simulatePeriod(int startMinute, int endMinute, TeamSetup homeTeam, TeamSetup awayTeam) {
         List<MatchEvent> events = generateHalfEvents(startMinute, endMinute, homeTeam, awayTeam);
 
         int homeGoals = 0;
-        int awayGoals = 0;
 
         for (MatchEvent ev : events) {
             if (ev.getEventType() == MatchEvent.EventType.GOAL) {
                 if ("Home".equalsIgnoreCase(ev.getTeamName())) {
                     homeGoals++;
-                } else if ("Away".equalsIgnoreCase(ev.getTeamName())) {
-                    awayGoals++;
                 }
             }
         }
 
-        return new MatchHalfResult(periodNumber, homeGoals, awayGoals, events);
+        return new MatchHalfResult(homeGoals, events);
     }
 
     /** คำนวณและสุ่มเหตุการณ์ที่จะเกิดขึ้นในแต่ละครึ่ง */
@@ -155,7 +152,7 @@ public class MatchEngine {
         return events;
     }
 
-    // ===================== ผลของแผน / ฟอร์เมชัน / ตัวผู้เล่น =====================
+    // ผลของแผน / ฟอร์เมชัน / ตัวผู้เล่น
 
     /**
      * ความน่าจะเป็นที่เหตุการณ์หนึ่งครั้งจะเกิดกับทีมเหย้า

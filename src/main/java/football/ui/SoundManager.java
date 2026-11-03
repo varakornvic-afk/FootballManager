@@ -40,7 +40,7 @@ public final class SoundManager {
 
     private SoundManager() {}
 
-    // ===================== MUTE =====================
+    // MUTE
 
     public static boolean isMuted() {
         return muted;
@@ -64,7 +64,7 @@ public final class SoundManager {
         muteListeners.add(listener);
     }
 
-    // ===================== MENU MUSIC =====================
+    // MENU MUSIC
 
     /** เริ่มเพลงเมนูใหม่ตั้งแต่ต้น (เรียกทุกครั้งที่กลับมาหน้าเมนู) */
     public static void playMenuMusic() {
@@ -94,7 +94,7 @@ public final class SoundManager {
         if (menuPlayer != null) menuPlayer.stop();
     }
 
-    // ===================== EFFECTS =====================
+    // EFFECTS
 
     /** เล่นเสียงเอฟเฟกต์หนึ่งครั้งด้วยความดังเต็ม (ไม่เล่นถ้าปิดเสียงอยู่) */
     public static void play(String path) {

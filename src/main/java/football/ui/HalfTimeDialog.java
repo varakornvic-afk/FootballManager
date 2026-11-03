@@ -33,7 +33,7 @@ public class HalfTimeDialog extends Stage {
     private TeamSetup updatedTeamSetup;
     private boolean confirmed = false;
 
-    // 📌 บันทึกจำนวนโควตาเปลี่ยนตัวที่ใช้ไปแล้ว
+    // บันทึกจำนวนโควตาเปลี่ยนตัวที่ใช้ไปแล้ว
     private int currentSubsUsed;
     private int newSubsMadeInSession = 0;
 
@@ -55,7 +55,7 @@ public class HalfTimeDialog extends Stage {
         VBox contentPanel = new VBox(8);
         contentPanel.setPadding(new Insets(15));
 
-        // 🔍 0. Opponent Scout Report
+        // 0. Opponent Scout Report
         String awayTacticName = awaySetup != null && awaySetup.getTactic() != null ?
                 awaySetup.getTactic().getClass().getSimpleName() : "Unknown";
         String awayFormName = awaySetup != null && awaySetup.getFormation() != null ?
@@ -128,9 +128,9 @@ public class HalfTimeDialog extends Stage {
         HBox btnActionPanel = new HBox(10, swapBtn, recommendBtn);
         btnActionPanel.setAlignment(Pos.CENTER);
 
-        // 🔄 ปุ่มสลับตัว (ดักจับโควตาไม่เกิน 3 คน)
+        // ปุ่มสลับตัว (ดักจับโควตาไม่เกิน 3 คน)
         swapBtn.setOnAction(ev -> {
-            // 🚨 เช็กว่าโควตา 3 คนเต็มหรือยัง
+            // เช็กว่าโควตา 3 คนเต็มหรือยัง
             if (this.currentSubsUsed + newSubsMadeInSession >= 3) {
                 showMessage(Alert.AlertType.WARNING, "Substitutions Limit Reached",
                         "คุณใช้โควตาเปลี่ยนตัวครบ 3 คนแล้ว! ไม่สามารถเปลี่ยนเพิ่มได้อีก");
@@ -221,7 +221,7 @@ public class HalfTimeDialog extends Stage {
         startH2Btn.setOnAction(ev -> {
             String selectedForm = formCombo.getValue();
 
-            // 📌 ปรับปรุงให้รองรับทุก Formation ตาม Dropdown
+            // ปรับปรุงให้รองรับทุก Formation ตาม Dropdown
             Formation newForm;
             switch (selectedForm != null ? selectedForm : "4-4-2") {
                 case "4-3-3": newForm = new Formation433(); break;
@@ -316,7 +316,7 @@ public class HalfTimeDialog extends Stage {
                 return;
             }
             String icon = p.getStaminaStatusIcon();
-            String posTag = "[" + p.getPosition() + "]"; // 📌 แทรกตำแหน่ง [ST], [CB], [GK]
+            String posTag = "[" + p.getPosition() + "]"; // แทรกตำแหน่ง [ST], [CB], [GK]
             String cardTag = yellowCards.contains(p.getName()) ? " 🟨" : "";
             String subbedOutTag = subbedOutPlayers.contains(p) ? " 🚫 [Unavailable]" : "";
 

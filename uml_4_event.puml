@@ -1,0 +1,107 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+interface football.event.GameEvent {
+~ String getEventTitle()
+~ String getPlayerName()
+~ String getImagePath()
+~ Color getThemeColor()
+~ String getEventTitle(boolean)
+}
+
+class football.event.MatchEvent {
+- int minute
+- String teamName
+- Player player
+- EventType eventType
+- String description
++ <<Create>> MatchEvent(int,String,Player,EventType,String)
++ int getMinute()
++ String getTeamName()
++ Player getPlayer()
++ EventType getEventType()
++ String getDescription()
+}
+
+enum football.event.EventType {
++  GOAL
++  SAVE
++  FOUL
++  YELLOW_CARD
++  RED_CARD
++  PENALTY
+}
+
+abstract class football.event.GameEvent$BaseGameEvent {
+# String playerName
+# Boolean isHome
++ <<Create>> BaseGameEvent(String,String)
++ <<Create>> BaseGameEvent(String,String,boolean)
++ String getPlayerName()
++ String getImagePath()
+# String getTeamPrefix(boolean)
+}
+
+class football.event.GameEvent$GoalEvent {
++ <<Create>> GoalEvent(String,String)
++ <<Create>> GoalEvent(String,String,boolean)
++ String getEventTitle()
++ String getEventTitle(boolean)
++ Color getThemeColor()
+}
+
+class football.event.GameEvent$FoulEvent {
+- boolean isRed
++ <<Create>> FoulEvent(String,String,boolean)
++ <<Create>> FoulEvent(String,String,boolean,boolean)
++ String getEventTitle()
++ String getEventTitle(boolean)
++ Color getThemeColor()
+}
+
+class football.event.GameEvent$SaveEvent {
++ <<Create>> SaveEvent(String,String)
++ <<Create>> SaveEvent(String,String,boolean)
++ String getEventTitle()
++ String getEventTitle(boolean)
++ Color getThemeColor()
+}
+
+class football.event.GameEvent$PenaltyEvent {
++ <<Create>> PenaltyEvent(String,String)
++ <<Create>> PenaltyEvent(String,String,boolean)
++ String getEventTitle()
++ String getEventTitle(boolean)
++ Color getThemeColor()
+}
+
+class football.event.GameEvent$SubstitutionEvent {
+- String playerOut
+- String playerIn
++ <<Create>> SubstitutionEvent(String,String,String)
++ <<Create>> SubstitutionEvent(String,String,String,boolean)
++ String getPlayerName()
++ String getEventTitle()
++ String getEventTitle(boolean)
++ Color getThemeColor()
+}
+
+class football.model.Player
+
+football.event.GameEvent +.. football.event.GameEvent$BaseGameEvent
+football.event.GameEvent <|.. football.event.GameEvent$BaseGameEvent
+football.event.GameEvent +.. football.event.GameEvent$GoalEvent
+football.event.GameEvent$BaseGameEvent <|-- football.event.GameEvent$GoalEvent
+football.event.GameEvent +.. football.event.GameEvent$FoulEvent
+football.event.GameEvent$BaseGameEvent <|-- football.event.GameEvent$FoulEvent
+football.event.GameEvent +.. football.event.GameEvent$SaveEvent
+football.event.GameEvent$BaseGameEvent <|-- football.event.GameEvent$SaveEvent
+football.event.GameEvent +.. football.event.GameEvent$PenaltyEvent
+football.event.GameEvent$BaseGameEvent <|-- football.event.GameEvent$PenaltyEvent
+football.event.GameEvent +.. football.event.GameEvent$SubstitutionEvent
+football.event.GameEvent$BaseGameEvent <|-- football.event.GameEvent$SubstitutionEvent
+football.event.MatchEvent --> football.model.Player
+football.event.MatchEvent --> football.event.EventType
+@enduml

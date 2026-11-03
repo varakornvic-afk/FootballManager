@@ -59,7 +59,7 @@ public class PlayerRepository {
                         players.add(new Player(name, position, pace, passing, heading, stamina, shoot, defense));
                     }
                 } catch (IllegalArgumentException e) {
-                    // 📌 ป้องกันกรณีข้อมูลแถวใดแถวหนึ่งผิดพลาด (เช่น Enum ไม่ตรง หรือ สถิติบวกรวมกันไม่ได้ 24)
+                    // ป้องกันกรณีข้อมูลแถวใดแถวหนึ่งผิดพลาด (เช่น Enum ไม่ตรง หรือ สถิติบวกรวมกันไม่ได้ 24)
                     System.err.println("Skipping invalid player row in CSV [" + line + "]: " + e.getMessage());
                 }
             }

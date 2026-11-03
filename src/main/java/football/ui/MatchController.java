@@ -88,7 +88,7 @@ public class MatchController {
         if (liveTimer != null) liveTimer.stop();
     }
 
-    // ===================== MATCH FLOW =====================
+    // MATCH FLOW
 
     public void runMatchSimulation() {
         SoundManager.stopMenuMusic(); // เริ่มแข่งแล้ว ตัดเพลงให้เสียงเหตุการณ์ในเกมชัด
@@ -219,7 +219,7 @@ public class MatchController {
         timer.start();
     }
 
-    // ===================== EVENT HANDLING =====================
+    // EVENT HANDLING
 
     private void processEvent(MatchEvent ev) {
         StaminaManager.updatePlayersStamina(ev, homeTeamSetup, awayTeamSetup);
@@ -444,7 +444,7 @@ public class MatchController {
         return keeperName;
     }
 
-    // ===================== MID-MATCH SUB DIALOG =====================
+    // MID-MATCH SUB DIALOG
 
     private void openMidMatchSubDialog() {
         List<Player> oldStarters = new ArrayList<>(homeTeamSetup.getStarters());
@@ -493,7 +493,7 @@ public class MatchController {
         }
     }
 
-    // ===================== VIEW HELPERS =====================
+    // VIEW HELPERS
 
     private void updateScoreBoard(int minute) {
         view.updateScoreBoard(liveHomeGoals, liveAwayGoals, minute);

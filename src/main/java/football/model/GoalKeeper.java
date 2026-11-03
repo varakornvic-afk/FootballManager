@@ -20,16 +20,12 @@ public class GoalKeeper extends Player {
         return super.getSaving();
     }
 
-    /** 🧤 เมื่อทำการเซฟในเกม ครบ 3 ครั้งจะลด Stamina 1 หน่วย */
+    /** เมื่อทำการเซฟในเกม ครบ 3 ครั้งจะลด Stamina 1 หน่วย */
     public void onSaveInGame() {
         saveCount++;
         if (saveCount >= 3) {
             this.setStamina(Math.max(0, this.getStamina() - 1));
             saveCount = 0; // รีเซ็ตตัวนับ
         }
-    }
-
-    public int getSaveCount() {
-        return saveCount;
     }
 }

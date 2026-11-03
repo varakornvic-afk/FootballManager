@@ -127,9 +127,6 @@ class TeamSetupTest {
                 .withSubstitution(find(l, "MF1"), find(b, "BMF"))
                 .withSubstitution(find(l, "ST1"), find(b, "BST"));
 
-        assertEquals(0, start.getSubstitutionsUsed());
-        assertEquals(3, s.getSubstitutionsUsed());
-        assertEquals(0, s.getRemainingSubstitutions());
         assertTrue(s.getStarters().contains(find(b, "BCB")));
         assertFalse(s.getStarters().contains(find(l, "CB1")));
         assertFalse(s.getBench().contains(find(b, "BCB")));
@@ -139,50 +136,11 @@ class TeamSetupTest {
     }
 
     @Test
-    void fatigueAppliesAfterFirstHalfAndSubstitutesAreFresh() {
-        List<Player> l = lineup();
-        List<Player> b = bench();
-        TeamSetup half = setup(l, b).endFirstHalf();
-        Player cb1 = find(l, "CB1");
-
-        assertEquals(4.0, half.effectiveValue(cb1, 4), 1e-9);
-
-        TeamSetup after = half.withSubstitution(cb1, find(b, "BCB"));
-        assertEquals(4.0, after.effectiveValue(find(b, "BCB"), 4), 1e-9);
-    }
-
-    @Test
     void lowerStaminaTiresMoreAndFactorsAreOrdered() {
         assertEquals(0.7, TeamSetup.fatigueFactor(1), 1e-9);
         assertTrue(TeamSetup.fatigueFactor(2) < TeamSetup.fatigueFactor(8));
         assertEquals(1.0, TeamSetup.positionFactor(0), 1e-9);
         assertTrue(TeamSetup.positionFactor(1) > TeamSetup.positionFactor(2));
         assertTrue(TeamSetup.positionFactor(2) > TeamSetup.positionFactor(3));
-    }
-
-    private static List<Player> paceTeam() {
-        List<Player> result = new ArrayList<>();
-        for (Player p : lineup()) {
-            result.add(p.getPosition() == GK
-                    ? new GoalKeeper(p.getName(), 10, 3, 3, 2, 2, 2, 2)
-                    : new Player(p.getName(), p.getPosition(), 10, 3, 3, 3, 3, 2));
-        }
-        return result;
-    }
-
-    @Test
-    void fitMultiplierIsClampedAndTacticDependent() {
-        // ค่าสถิติ 4 ทั้งหมด: Counter Attack ให้ ST (2 คน) ได้ Pace เพิ่มครึ่งหนึ่ง => fit เฉลี่ย (9*4 + 2*6) / 11
-        double even = setup(lineup(), bench()).fitMultiplier();
-        assertEquals(1.0 + 0.1 * ((48.0 / 11) - 4) / 4, even, 1e-9);
-        assertTrue(even > 1.0 && even < 1.02); // ใกล้กลางๆ ยังไม่ถึงขีดจำกัด
-
-        TeamSetup counter = setup(paceTeam(), bench());
-        assertEquals(1.1, counter.fitMultiplier(), 1e-9); // fit เฉลี่ยสูงมาก ถูกจำกัดช่วงไว้ที่ 1.1
-
-        // Possession: Passing 3 ทุกคน และ MF (2 คน) ได้เพิ่มครึ่งหนึ่ง (1) => fit เฉลี่ย (11*3 + 2*1) / 11
-        TeamSetup possession = TeamSetup.create(new Possession(), formation442(),
-                Stance.NORMAL, paceTeam(), bench());
-        assertEquals(1.0 + 0.1 * ((35.0 / 11) - 4) / 4, possession.fitMultiplier(), 1e-9);
     }
 }

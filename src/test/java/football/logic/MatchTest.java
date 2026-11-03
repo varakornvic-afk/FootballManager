@@ -48,26 +48,20 @@ class MatchTest {
         Match match = new Match(home, away, 999L);
 
         // 1. เล่นครึ่งแรก
-        match.playFirstHalf();
-        assertEquals(1, match.getAllResults().size(), "ควรมีผลลัพธ์ 1 ครึ่งหลังจบครึ่งแรก");
+        MatchHalfResult firstHalf = match.playFirstHalf();
+        assertNotNull(firstHalf, "ควรมีผลลัพธ์ครึ่งแรก");
 
         // 2. ตรวจสอบ Fatigue Logic ของ Domain Layer
-        TeamSetup postFirstHalfTeam = match.getHomeTeam().endFirstHalf();
-        Player sampleStarter = postFirstHalfTeam.getStarters().get(1);
+        Player sampleStarter = home.getStarters().get(1);
         sampleStarter.setStamina(1); // จำลองว่านักเตะล้าจน Stamina เหลือ 1
 
-        // 📌 จุดแก้ไข: คูณ TeamSetup.fatigueFactor(...) เข้าไปด้วย เพื่อคำนวณความล้าจริง
-        double effectiveValWithFatigue = postFirstHalfTeam.effectiveValue(sampleStarter, 4)
+        double effectiveValWithFatigue = home.effectiveValue(sampleStarter, 4)
                 * TeamSetup.fatigueFactor(sampleStarter.getStamina());
         assertTrue(effectiveValWithFatigue < 4.0, "ผู้เล่นที่มีค่า Stamina ต่ำจากความล้า ต้องมีค่าประสิทธิภาพรวมลดลง");
 
         // 3. เล่นครึ่งหลัง
-        match.playSecondHalf();
-        assertEquals(2, match.getAllResults().size(), "ควรมีผลลัพธ์ 2 ครึ่งหลังจบการแข่งขัน");
-
-        // 4. ตรวจสอบผลรวมสกอร์
-        int totalHome = match.getAllResults().stream().mapToInt(MatchHalfResult::getHomeGoals).sum();
-        assertEquals(totalHome, match.getTotalHomeGoals(), "ผลรวมประตูฝั่งเจ้าบ้านต้องตรงกับประตูรวมในแมตช์");
+        MatchHalfResult secondHalf = match.playSecondHalf();
+        assertNotNull(secondHalf, "ควรมีผลลัพธ์ครึ่งหลัง");
     }
 
     @Test

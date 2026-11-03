@@ -104,12 +104,12 @@ public class Player {
         }
     }
 
-    /** ⚡ ลด Stamina ตามจำนวนที่ระบุ โดยไม่ให้ต่ำกว่า 0 */
+    /** ลด Stamina ตามจำนวนที่ระบุ โดยไม่ให้ต่ำกว่า 0 */
     public void reduceStamina(int amount) {
         if (this instanceof GoalKeeper) {
             return;
         }
-        this.stamina = Math.max(0, this.stamina - amount); // 📌 แก้ไข Syntax Error ใส่เครื่องหมายลบ -
+        this.stamina = Math.max(0, this.stamina - amount);
     }
 
     public void setStamina(int stamina) {

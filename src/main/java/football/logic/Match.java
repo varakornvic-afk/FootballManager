@@ -3,15 +3,10 @@ package football.logic;
 import football.model.Player;
 import football.model.TeamSetup;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 public class Match {
     private TeamSetup homeTeam;
     private TeamSetup awayTeam;
     private final MatchEngine engine;
-    private final List<MatchHalfResult> periodResults = new ArrayList<>();
 
     private boolean firstHalfPlayed = false;
     private boolean secondHalfPlayed = false;
@@ -27,8 +22,7 @@ public class Match {
             throw new IllegalStateException("First half has already been played");
         }
 
-        MatchHalfResult result = engine.simulatePeriod(1, 1, 45, homeTeam, awayTeam);
-        periodResults.add(result);
+        MatchHalfResult result = engine.simulatePeriod(1, 45, homeTeam, awayTeam);
         firstHalfPlayed = true;
 
         applyFatigue();
@@ -43,8 +37,7 @@ public class Match {
             throw new IllegalStateException("Second half has already been played");
         }
 
-        MatchHalfResult result = engine.simulatePeriod(2, 46, 90, homeTeam, awayTeam);
-        periodResults.add(result);
+        MatchHalfResult result = engine.simulatePeriod(46, 90, homeTeam, awayTeam);
         secondHalfPlayed = true;
 
         applyFatigue();
@@ -64,23 +57,7 @@ public class Match {
         }
     }
 
-    public List<MatchHalfResult> getAllResults() {
-        return Collections.unmodifiableList(periodResults);
-    }
-
-    public int getTotalHomeGoals() {
-        if (periodResults == null || periodResults.isEmpty()) return 0;
-        return periodResults.stream().mapToInt(MatchHalfResult::getHomeGoals).sum();
-    }
-
-    public int getTotalAwayGoals() {
-        if (periodResults == null || periodResults.isEmpty()) return 0;
-        return periodResults.stream().mapToInt(MatchHalfResult::getAwayGoals).sum();
-    }
-
-    public TeamSetup getHomeTeam() { return homeTeam; }
     public void setHomeTeam(TeamSetup homeTeam) { this.homeTeam = homeTeam; }
 
-    public TeamSetup getAwayTeam() { return awayTeam; }
     public void setAwayTeam(TeamSetup awayTeam) { this.awayTeam = awayTeam; }
 }

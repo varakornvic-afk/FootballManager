@@ -26,7 +26,7 @@ class MatchEngineTacticTest {
     private static final int[] FAST   = {8, 3, 3, 4, 2, 4};
     private static final int[] SLOW   = {2, 5, 4, 4, 5, 4};
 
-    // ---------- ตัวช่วยสร้างผู้เล่นและทีม ----------
+    // ตัวช่วยสร้างผู้เล่นและทีม
 
     /** สร้างชุดค่าพลังรวม 24 (stamina 4 คงที่ shoot คิดจากส่วนที่เหลือ) */
     private static int[] stats(int pace, int passing, int heading, int defense) {
@@ -115,7 +115,7 @@ class MatchEngineTacticTest {
         return teamOf(prefix, new CounterAttack(), f, Stance.NORMAL, lineup(prefix, f, base, Map.of()), keeper);
     }
 
-    // ---------- ชนะทางแผน / exposure ----------
+    // ชนะทางแผน / exposure
 
     @Test
     void identicalTeamsAreEven() {
@@ -174,7 +174,7 @@ class MatchEngineTacticTest {
         assertTrue(MatchEngine.homeEventShare(counter, exposed) > MatchEngine.homeEventShare(counter, safe));
     }
 
-    // ---------- ฟอร์เมชัน ----------
+    // ฟอร์เมชัน
 
     @Test
     void specialistFormationGivesABonusAndOffPlanFormationACost() {
@@ -210,7 +210,7 @@ class MatchEngineTacticTest {
         assertEquals(0.03, with343 - with532, EPS);
     }
 
-    // ---------- ฝีมือผู้ยิงกับแนวรับ ----------
+    // ฝีมือผู้ยิงกับแนวรับ
 
     @Test
     void anAverageTeamHasAnAverageDefenseBlock() {
@@ -415,7 +415,7 @@ class MatchEngineTacticTest {
         assertEquals(2 * MatchEngine.TACTIC_WIN_GOAL, counterShoots - possessionShoots, EPS);
     }
 
-    // ---------- คู่ปะทะตามตำแหน่ง ----------
+    // คู่ปะทะตามตำแหน่ง
 
     @Test
     void strikerPaceAndHeadingAgainstCentreBacksChangesTheEdge() {
@@ -487,7 +487,7 @@ class MatchEngineTacticTest {
         assertEquals(TacticalEdge.DUELS_TOTAL_MAX, duels, EPS);
     }
 
-    // ---------- ความเข้ากับแผนของตัวผู้เล่น ----------
+    // ความเข้ากับแผนของตัวผู้เล่น
 
     @Test
     void startersThatFitTheTacticBetterThanTheBenchGiveAnEdge() {
@@ -552,7 +552,7 @@ class MatchEngineTacticTest {
         assertEquals(8, counter.fitScore(centreBack));
     }
 
-    // ---------- Stance ----------
+    // Stance
 
     @Test
     void allOutAttackGetsMoreChancesAndParkTheBusGetsFewer() {
@@ -579,7 +579,7 @@ class MatchEngineTacticTest {
         assertEquals(base - MatchEngine.STANCE_GOAL, MatchEngine.shotConversionChance(shooter, parked, taker), EPS);
     }
 
-    // ---------- ใบแดง / จำนวนคน ----------
+    // ใบแดง / จำนวนคน
 
     @Test
     void playingWithTenMenLowersTheShare() {
@@ -602,7 +602,7 @@ class MatchEngineTacticTest {
         assertTrue(MatchEngine.homeEventShare(weak, strong) >= MatchEngine.MIN_SHARE - EPS);
     }
 
-    // ---------- ลงผิดตำแหน่ง ----------
+    // ลงผิดตำแหน่ง
 
     @Test
     void exactSlotLineupHasNoPositionPenalty() {
@@ -657,44 +657,7 @@ class MatchEngineTacticTest {
         assertEquals(0.0, TacticalEdge.outOfPositionPenalty(tenMen), EPS);
     }
 
-    // ---------- โบนัสที่ดึงไปแสดงใน UI ได้ (ตอนนี้เกมไม่แสดง pop-up) ----------
-
-    @Test
-    void evenTeamsListNoBonuses() {
-        TeamSetup a = team("H", new CounterAttack(), Stance.NORMAL);
-        TeamSetup b = team("A", new CounterAttack(), Stance.NORMAL);
-
-        assertTrue(TacticalEdge.of(a, b).bonuses().isEmpty());
-    }
-
-    @Test
-    void winningTheMatchupListsABonusWithItsPercentage() {
-        TeamSetup counter = team("H", new CounterAttack(), Stance.NORMAL);
-        TeamSetup possession = team("A", new Possession(), Stance.NORMAL);
-
-        List<TacticalEdge.Bonus> bonuses = TacticalEdge.of(counter, possession).bonuses();
-
-        assertEquals(1, bonuses.size());
-        assertEquals("Counter Attack beats Possession", bonuses.get(0).label());
-        assertEquals("+4%", bonuses.get(0).percentText());
-        assertTrue(TacticalEdge.of(possession, counter).bonuses().isEmpty());
-    }
-
-    @Test
-    void aSpecialistFormationAndAGoodLineupAreListedAsBonuses() {
-        TeamSetup well = team("H", new Possession(), new Formation433(), Stance.NORMAL,
-                new int[]{3, 8, 3, 4, 2, 4}, new int[]{3, 2, 3, 4, 8, 4}, slotPositions(new Formation433()));
-        TeamSetup opponent = team("A", new WidePlay(), new Formation442(), Stance.NORMAL);
-
-        List<String> labels = TacticalEdge.of(well, opponent).bonuses().stream()
-                .map(TacticalEdge.Bonus::label).toList();
-
-        assertTrue(labels.contains("4-3-3 suits Possession"), labels.toString());
-        assertTrue(labels.contains("Lineup fits Possession"), labels.toString());
-        assertTrue(labels.contains("Possession beats Wide Play"), labels.toString());
-    }
-
-    // ---------- ผลจริงในหลายแมตช์ ----------
+    // ผลจริงในหลายแมตช์
 
     @Test
     void theFavouredTacticScoresMoreOverManyMatches() {

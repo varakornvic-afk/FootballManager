@@ -3,17 +3,9 @@ package football.model;
 import static football.model.Position.*;
 
 public enum Stance {
-    NORMAL("ปกติ"),
-    PARK_THE_BUS("อุด"),
-    ALL_OUT_ATTACK("พับสนามบุก");
-
-    private final String label;
-
-    Stance(String label) {
-        this.label = label;
-    }
-
-    public String getLabel() { return label; }
+    NORMAL,
+    PARK_THE_BUS,
+    ALL_OUT_ATTACK;
 
     /** แปลงช่องตำแหน่งของฟอร์เมชันตามโหมด */
     public SlotLayout apply(SlotLayout base) {

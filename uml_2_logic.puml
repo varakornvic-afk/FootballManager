@@ -1,0 +1,186 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+class football.logic.Match {
+- TeamSetup homeTeam
+- TeamSetup awayTeam
+- MatchEngine engine
+- boolean firstHalfPlayed
+- boolean secondHalfPlayed
++ <<Create>> Match(TeamSetup,TeamSetup,long)
++ MatchHalfResult playFirstHalf()
++ MatchHalfResult playSecondHalf()
+- void applyFatigue()
++ void setHomeTeam(TeamSetup)
++ void setAwayTeam(TeamSetup)
+}
+
+class football.logic.MatchEngine {
+~ {static} double BASE_EVENT_SHARE
+~ {static} double MIN_SHARE
+~ {static} double MAX_SHARE
+~ {static} double BASE_GOAL_CHANCE
+~ {static} double ATTACK_VS_DEFENSE_GOAL
+~ {static} double TACTIC_WIN_GOAL
+~ {static} double STANCE_GOAL
+~ {static} double SHOT_SKILL_PER_POINT
+~ {static} double SHOT_SKILL_MAX
+~ {static} double NEUTRAL_SHOOT
+~ {static} double NEUTRAL_BLOCK
+~ {static} double COUNTER_STRIKER_PER_POINT
+~ {static} double COUNTER_STRIKER_MAX
+~ {static} double POSSESSION_PASSING_PER_POINT
+~ {static} double POSSESSION_PASSING_MAX
+~ {static} double NEUTRAL_MF_PASSING
+~ {static} double WIDE_HEADING_PER_POINT
+~ {static} double WIDE_HEADING_MAX
+~ {static} double NEUTRAL_ST_HEADING
+~ {static} double MIN_GOAL_CHANCE
+~ {static} double MAX_GOAL_CHANCE
+- Random rand
++ <<Create>> MatchEngine()
++ <<Create>> MatchEngine(long)
++ MatchHalfResult simulatePeriod(int,int,TeamSetup,TeamSetup)
++ List<MatchEvent> generateHalfEvents(int,int,TeamSetup,TeamSetup)
+~ {static} double homeEventShare(TeamSetup,TeamSetup)
+~ {static} double shotConversionChance(TeamSetup,TeamSetup,Player)
+~ {static} double averageMidfieldPassing(TeamSetup)
+~ {static} double defenseBlock(TeamSetup)
+- {static} double clamp(double,double,double)
+- Player selectByShoot(List<Player>)
+- {static} double shootWeight(Player)
+- Player notGoalkeeper(List<Player>,Player)
+- void applyEventFatigue(Player)
+}
+
+class football.logic.MatchHalfResult {
+- int homeGoals
+- List<MatchEvent> events
++ <<Create>> MatchHalfResult(int,List<MatchEvent>)
++ int getHomeGoals()
++ List<MatchEvent> getEvents()
+}
+
+class football.logic.TacticalEdge {
+~ {static} double TACTIC_WIN_SHARE
+~ {static} double CONTROL_SHARE_PER_POINT
+~ {static} int NEUTRAL_CONTROL
+~ {static} double FORMATION_FIT_SHARE
+~ {static} double FIT_SHARE_PER_POINT
+~ {static} double FIT_SHARE_MAX
+~ {static} double STANCE_SHARE
+~ {static} double FATIGUE_SHARE
+~ {static} double MAN_SHARE
+~ {static} double OUT_OF_POSITION_SAME_GROUP
+~ {static} double OUT_OF_POSITION_CROSS_GROUP
+~ {static} double OUT_OF_POSITION_MAX
+~ {static} double DUEL_SHARE_PER_POINT
+~ {static} double DUEL_MAX
+~ {static} double DUELS_TOTAL_MAX
+~ {static} double NEUTRAL_ST_CB
+~ {static} double NEUTRAL_FW_FB
+~ {static} double NEUTRAL_MW_MF
+- double tacticMatchup
+- double formationControl
+- double formationFit
+- double squadFit
+- double duels
+- double stance
+- double manCount
+- double fatigue
+- double outOfPosition
+- <<Create>> TacticalEdge(double,double,double,double,double,double,double,double,double)
++ {static} TacticalEdge of(TeamSetup,TeamSetup)
++ double tacticMatchup()
++ double formationControl()
++ double formationFit()
++ double squadFit()
++ double duels()
++ double stance()
++ double manCount()
++ double fatigue()
++ double outOfPosition()
++ double total()
+- {static} double duels(TeamSetup,TeamSetup)
+- {static} double duelShare(double)
+- {static} List<Player> byPosition(TeamSetup,Position)
+- {static} double average(List<Player>,ToIntFunction<Player>)
+- {static} double squadFit(TeamSetup)
+- {static} List<Player> outfield(List<Player>)
+- {static} double averageFit(List<Player>,Tactic)
+- {static} double stanceShare(Stance)
+- {static} int groupOf(Position)
+~ {static} double outOfPositionPenalty(TeamSetup)
+- {static} double clamp(double,double,double)
+}
+
+class football.logic.MatchRules {
++ {static} double TACTIC_ADVANTAGE
++ {static} double BASE_PENALTY
+- <<Create>> MatchRules()
++ {static} double tacticModifier(Tactic,Tactic,Formation)
+}
+
+class football.logic.Fatigue {
++ {static} double MIN_FACTOR
+- <<Create>> Fatigue()
++ {static} double factor(Player)
++ {static} double averageFactor(TeamSetup)
+}
+
+class football.logic.StaminaManager {
+- <<Create>> StaminaManager()
++ {static} void updatePlayersStamina(MatchEvent,TeamSetup,TeamSetup)
+- {static} void reduceOutfieldStamina(TeamSetup)
+}
+
+class football.logic.MatchStatistics {
+- int homeShots
+- int awayShots
+- int homeShotsOnTarget
+- int awayShotsOnTarget
+- int homeYellowCards
+- int awayYellowCards
+- int homeRedCards
+- int awayRedCards
+- int homePossessionPercent
+- int awayPossessionPercent
++ {static} MatchStatistics calculate(List<MatchEvent>)
++ int getHomeShots()
++ int getAwayShots()
++ int getHomeShotsOnTarget()
++ int getAwayShotsOnTarget()
++ int getHomeYellowCards()
++ int getAwayYellowCards()
++ int getHomeRedCards()
++ int getAwayRedCards()
++ int getHomePossessionPercent()
++ int getAwayPossessionPercent()
+}
+
+class football.model.TeamSetup
+class football.model.Player
+interface football.model.Tactic
+abstract class football.model.Formation
+class football.event.MatchEvent
+
+football.logic.Match --> football.logic.MatchEngine : engine
+football.logic.Match --> "home / away" football.model.TeamSetup
+football.logic.Match ..> football.logic.MatchHalfResult
+football.logic.MatchEngine ..> football.logic.MatchHalfResult
+football.logic.MatchEngine ..> football.event.MatchEvent
+football.logic.MatchEngine ..> football.model.TeamSetup
+football.logic.MatchHalfResult o-- "events" football.event.MatchEvent
+football.logic.MatchStatistics ..> football.event.MatchEvent
+football.logic.StaminaManager ..> football.event.MatchEvent
+football.logic.StaminaManager ..> football.model.TeamSetup
+football.logic.TacticalEdge ..> football.model.TeamSetup
+football.logic.MatchRules ..> football.model.Tactic
+football.logic.MatchRules ..> football.model.Formation
+football.logic.Fatigue ..> football.model.Player
+football.logic.Fatigue ..> football.model.TeamSetup
+hide football.logic.MatchEngine fields
+hide football.logic.TacticalEdge fields
+@enduml

@@ -21,11 +21,9 @@ public class GoalKeeperTest {
         int initialStamina = gk.getStamina();
 
         gk.onSaveInGame();
-        assertEquals(1, gk.getSaveCount(), "saveCount ควรเพิ่มเป็น 1");
         assertEquals(initialStamina, gk.getStamina(), "Stamina ยังไม่ควรลดเมื่อเซฟครั้งที่ 1");
 
         gk.onSaveInGame();
-        assertEquals(2, gk.getSaveCount(), "saveCount ควรเพิ่มเป็น 2");
         assertEquals(initialStamina, gk.getStamina(), "Stamina ยังไม่ควรลดเมื่อเซฟครั้งที่ 2");
     }
 
@@ -39,7 +37,6 @@ public class GoalKeeperTest {
         gk.onSaveInGame(); // ครั้งที่ 3 -> หัก Stamina และรีเซ็ตตัวนับ
 
         assertEquals(initialStamina - 1, gk.getStamina(), "Stamina ควรลดลง 1 หน่วยหลังเซฟครบ 3 ครั้ง");
-        assertEquals(0, gk.getSaveCount(), "saveCount ควรถูกรีเซ็ตกลับเป็น 0");
     }
 
     @Test

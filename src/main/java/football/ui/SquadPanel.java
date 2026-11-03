@@ -213,7 +213,7 @@ public class SquadPanel extends ImageBackgroundPanel {
         update.run();
         box.setTooltip(boxTip);
 
-        box.setCellFactory(lv -> new ListCell<>() {
+        box.setCellFactory(lv -> new ListCell<String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -235,7 +235,7 @@ public class SquadPanel extends ImageBackgroundPanel {
             }
         });
         // ช่องที่แสดงค่าที่เลือกอยู่ ใช้ข้อความธรรมดา (tooltip ของช่องดูแลโดย boxTip)
-        box.setButtonCell(new ListCell<>() {
+        box.setButtonCell(new ListCell<String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);

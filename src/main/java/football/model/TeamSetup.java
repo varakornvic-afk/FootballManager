@@ -13,12 +13,9 @@ import java.util.function.ToIntFunction;
 /** ทีมหนึ่งฝั่ง: แทคติก (ล็อก) + ฟอร์เมชัน + โหมด + ตัวจริง 11 + สำรอง immutable ทุกการเปลี่ยนคืนอ็อบเจ็กต์ใหม่ */
 public final class TeamSetup {
     public static final int LINEUP_SIZE = 11;
-    public static final int BENCH_SIZE = 5;
     public static final int MAX_SUBSTITUTIONS = 3;
 
     private static final double FATIGUE_RATE = 0.3;
-    private static final double FIT_RANGE = 0.1;
-    private static final double BASE_AVERAGE = 4.0; // ค่าเฉลี่ยสถิติ = 24 / 6
 
     private final Tactic tactic;
     private final Formation formation;
@@ -42,7 +39,7 @@ public final class TeamSetup {
             throw new IllegalArgumentException("Bench must contain exactly 5 players");
         }
 
-        // 📌 เช็กว่าตัวจริงต้องมีผู้รักษาประตู (GK) เพียง 1 คนเท่านั้น
+        // เช็กว่าตัวจริงต้องมีผู้รักษาประตู (GK) เพียง 1 คนเท่านั้น
         long gkCount = starters.stream()
                 .filter(p -> p.getPosition() == Position.GK || p instanceof GoalKeeper)
                 .count();
@@ -62,7 +59,6 @@ public final class TeamSetup {
         Objects.requireNonNull(starters, "starters");
         Objects.requireNonNull(bench, "bench");
 
-        // แก้ไขเงื่อนไขตรงนี้ให้รองรับใบแดง (starters > LINEUP_SIZE แทน !=)
         if (starters.size() > LINEUP_SIZE) {
             throw new IllegalArgumentException("lineup cannot exceed " + LINEUP_SIZE + " players");
         }
@@ -82,7 +78,7 @@ public final class TeamSetup {
         this.assignment = assign();
     }
 
-    // ---------- การจัดคนลงช่อง ----------
+    // การจัดคนลงช่อง
 
     private Map<Player, Position> assign() {
         SlotLayout layout = stance.apply(formation.getSlots());
@@ -155,7 +151,7 @@ public final class TeamSetup {
         free.merge(slot, -1, Integer::sum);
     }
 
-    // ---------- ค่าที่ใช้คำนวณ ----------
+    // ค่าที่ใช้คำนวณ
 
     /** ตัวคูณสถิติตามระยะห่างจากตำแหน่งจริง */
     public static double positionFactor(int distance) {
@@ -189,23 +185,7 @@ public final class TeamSetup {
         return value;
     }
 
-    /** ค่าเฉลี่ย fitScore ของแทคติก (หลังหักโทษ/ความล้า) ของคนที่มีอยู่ในสนาม */
-    public double averageFit() {
-        double sum = 0;
-        for (Player p : starters) {
-            sum += effectiveValue(p, tactic.fitScore(p));
-        }
-        // ป้องกันการหารด้วย 0 กรณียังไม่มีตัวจริง หรือโดนไล่ออกหมด
-        return starters.isEmpty() ? 0 : sum / starters.size();
-    }
-
-    /** ตัวคูณจากความเหมาะสมของนักเตะ ช่วง 0.9-1.1 (เฉลี่ย 4 = 1.0) */
-    public double fitMultiplier() {
-        double m = 1.0 + FIT_RANGE * (averageFit() - BASE_AVERAGE) / BASE_AVERAGE;
-        return Math.max(1.0 - FIT_RANGE, Math.min(1.0 + FIT_RANGE, m));
-    }
-
-    // ---------- การเปลี่ยนแปลง (คืนอ็อบเจ็กต์ใหม่) ----------
+    // การเปลี่ยนแปลง (คืนอ็อบเจ็กต์ใหม่)
 
     public TeamSetup withFormation(Formation newFormation) {
         return new TeamSetup(tactic, newFormation, stance, starters, bench,
@@ -215,16 +195,6 @@ public final class TeamSetup {
     public TeamSetup withStance(Stance newStance) {
         return new TeamSetup(tactic, formation, newStance, starters, bench,
                 substitutionsUsed, tired);
-    }
-
-    /** เรียกตอนจบครึ่งแรก (ก่อนเปลี่ยนตัว): ทุกคนที่ลงอยู่ถูกนับว่าล้า */
-    public TeamSetup endFirstHalf() {
-        for (Player p : starters) {
-            if (p.getPosition() != Position.GK && Math.random() < 0.15) {
-                p.setStamina(Math.max(0, p.getStamina() - 1));
-            }
-        }
-        return this;
     }
 
     public TeamSetup withSubstitution(Player out, Player in) {
@@ -273,6 +243,4 @@ public final class TeamSetup {
     public Stance getStance() { return stance; }
     public List<Player> getStarters() { return starters; }
     public List<Player> getBench() { return bench; }
-    public int getSubstitutionsUsed() { return substitutionsUsed; }
-    public int getRemainingSubstitutions() { return MAX_SUBSTITUTIONS - substitutionsUsed; }
 }

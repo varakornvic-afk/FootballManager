@@ -57,7 +57,7 @@ public class MatchSummaryDialog extends Stage {
             statsPanel.getColumnConstraints().add(cc);
         }
 
-        // 📌 Null-Safety Check
+        // Null-Safety Check
         if (stats != null) {
             addStatRow(statsPanel, 0, stats.getHomePossessionPercent() + "%", "Possession", stats.getAwayPossessionPercent() + "%");
             addStatRow(statsPanel, 1, String.valueOf(stats.getHomeShots()), "Total Shots", String.valueOf(stats.getAwayShots()));

@@ -70,7 +70,7 @@ public class MatchStatistics {
         int totalAttacks = homeAttacks + awayAttacks;
         if (totalAttacks > 0) {
             stats.homePossessionPercent = (int) Math.round(((double) homeAttacks / totalAttacks) * 100);
-            stats.awayPossessionPercent = 100 - stats.homePossessionPercent; // 📌 แก้ไข Syntax Error
+            stats.awayPossessionPercent = 100 - stats.homePossessionPercent;
         }
 
         return stats;

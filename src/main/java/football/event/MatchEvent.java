@@ -26,7 +26,6 @@ public class MatchEvent {
         this.description = description;
     }
 
-    // 📌 เมธอด Public Getter ที่ MainFrame และ IDE กำลังเรียกหา
     public int getMinute() { return minute; }
     public String getTeamName() { return teamName; }
     public Player getPlayer() { return player; }

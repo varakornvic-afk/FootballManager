@@ -1,0 +1,210 @@
+@startuml
+class football.model.Formation433 {
++ <<Create>> Formation433()
++ double fitFor(Tactic)
++ SlotLayout getSlots()
+}
+
+enum football.model.Stance {
++  NORMAL
++  PARK_THE_BUS
++  ALL_OUT_ATTACK
++ SlotLayout apply(SlotLayout)
+- {static} void requireAtLeastOne(int,String)
+}
+
+
+abstract class football.model.Formation {
+# {static} double SPECIALIST_FIT
+# {static} double OFF_PLAN_FIT
+# {static} double POOR_FIT
+# {static} double VERSATILE_FIT
+- String name
+- int attack
+- int control
+- int defense
+- double exposure
+# <<Create>> Formation(String,int,int,int,double)
++ {abstract}double fitFor(Tactic)
++ String getName()
++ int getAttack()
++ int getControl()
++ int getDefense()
++ double getExposure()
++ {abstract}SlotLayout getSlots()
+}
+
+
+class football.model.WidePlay {
++ String getName()
++ String getDescription()
++ boolean beats(Tactic)
++ int fitScore(Player)
+}
+
+class football.model.Possession {
++ String getName()
++ String getDescription()
++ boolean beats(Tactic)
++ int fitScore(Player)
+}
+
+class football.model.Player {
++ {static} int TOTAL
++ {static} int MIN_STAT
++ {static} int MAX_STAT
+- String name
+- Position position
+- int pace
+- int passing
+- int heading
+# int stamina
+# int maxStamina
+- int shoot
+- int defense
+- int saving
++ <<Create>> Player(String,Position,int,int,int,int,int,int)
+# <<Create>> Player(String,Position,int,int,int,int,int,int,int)
+- {static} Position requireOutfield(Position)
+# {static} void checkRange(String,int)
++ String getName()
++ Position getPosition()
++ int getPace()
++ int getPassing()
++ int getHeading()
++ int getStamina()
++ int getMaxStamina()
++ int getShoot()
++ int getDefense()
++ int getSaving()
++ String getStaminaStatusIcon()
++ String toString()
++ void reduceStamina(int)
++ void setStamina(int)
+}
+
+
+class football.model.Formation343 {
++ <<Create>> Formation343()
++ double fitFor(Tactic)
++ SlotLayout getSlots()
+}
+
+class football.model.SlotLayout {
++ {static} int OUTFIELD_SLOTS
+- Map<Position,Integer> counts
++ <<Create>> SlotLayout(int,int,int,int,int,int)
++ int count(Position)
++ boolean equals(Object)
++ int hashCode()
+}
+
+
+class football.model.TeamSetup {
++ {static} int LINEUP_SIZE
++ {static} int MAX_SUBSTITUTIONS
+- {static} double FATIGUE_RATE
+- Tactic tactic
+- Formation formation
+- Stance stance
+- List<Player> starters
+- List<Player> bench
+- int substitutionsUsed
+- Set<Player> tired
+- Map<Player,Position> assignment
+- <<Create>> TeamSetup(Tactic,Formation,Stance,List<Player>,List<Player>,int,Set<Player>)
++ {static} TeamSetup create(Tactic,Formation,Stance,List<Player>,List<Player>)
+- Map<Player,Position> assign()
+- {static} Player best(List<Player>,Position,ToIntFunction<Player>)
+- {static} Position closestFreeSlot(Player,Map<Position,Integer>)
+- {static} void place(Map<Player,Position>,Map<Position,Integer>,Player,Position)
++ {static} double positionFactor(int)
++ {static} double fatigueFactor(int)
++ Position assignedPosition(Player)
++ double effectiveValue(Player,int)
++ TeamSetup withFormation(Formation)
++ TeamSetup withStance(Stance)
++ TeamSetup withSubstitution(Player,Player)
++ TeamSetup withoutPlayer(Player)
++ TeamSetup withLineup(Formation,Stance,List<Player>,List<Player>)
++ Tactic getTactic()
++ Formation getFormation()
++ Stance getStance()
++ List<Player> getStarters()
++ List<Player> getBench()
+}
+
+
+class football.model.Formation532 {
++ <<Create>> Formation532()
++ double fitFor(Tactic)
++ SlotLayout getSlots()
+}
+
+interface football.model.Tactic {
+~ String getName()
+~ String getDescription()
+~ boolean beats(Tactic)
+~ int fitScore(Player)
+}
+
+class football.model.GoalKeeper {
+- int saveCount
++ <<Create>> GoalKeeper(String,int,int,int,int,int,int,int)
+- {static} int checkSaving(int)
++ int getSaving()
++ void onSaveInGame()
+}
+
+
+class football.model.Formation442 {
++ <<Create>> Formation442()
++ double fitFor(Tactic)
++ SlotLayout getSlots()
+}
+
+enum football.model.Position {
++  GK
++  CENTER_BACK
++  FULLBACK
++  MIDFIELD
++  MIDWING
++  STRIKER
++  FRONTWING
+- int line
+- boolean wide
+~ <<Create>> Position(int,boolean)
++ int distanceTo(Position)
+}
+
+
+class football.model.CounterAttack {
++ String getName()
++ String getDescription()
++ boolean beats(Tactic)
++ int fitScore(Player)
+}
+
+
+
+football.model.Formation <|-- football.model.Formation433
+football.model.Tactic <|.. football.model.WidePlay
+football.model.Tactic <|.. football.model.Possession
+football.model.Formation <|-- football.model.Formation343
+football.model.Formation <|-- football.model.Formation532
+football.model.Player <|-- football.model.GoalKeeper
+football.model.Formation <|-- football.model.Formation442
+football.model.Tactic <|.. football.model.CounterAttack
+football.model.TeamSetup o-- "starters 11" football.model.Player
+football.model.TeamSetup o-- "bench" football.model.Player
+football.model.TeamSetup --> football.model.Tactic
+football.model.TeamSetup --> football.model.Formation
+football.model.TeamSetup --> football.model.Stance
+football.model.TeamSetup ..> football.model.Position : assignment
+football.model.Formation --> football.model.SlotLayout : getSlots
+football.model.Formation ..> football.model.Tactic : fitFor
+football.model.Stance ..> football.model.SlotLayout : apply
+football.model.SlotLayout ..> football.model.Position
+football.model.Player --> football.model.Position
+football.model.Tactic ..> football.model.Player : fitScore
+@enduml

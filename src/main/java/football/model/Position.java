@@ -25,9 +25,6 @@ public enum Position {
             }
             throw new IllegalArgumentException("GK cannot be compared with outfield positions");
         }
-        return Math.abs(line - other.line) + (wide == other.wide ? 0 : 1); // 📌 แก้ไข Syntax Error
+        return Math.abs(line - other.line) + (wide == other.wide ? 0 : 1);
     }
-
-    public int getLine() { return line; }
-    public boolean isWide() { return wide; }
 }

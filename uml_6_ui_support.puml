@@ -1,0 +1,118 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+class football.ui.ImageBackgroundPanel {
+- Map<String,Image> cache
+- ImageView imageView
+- Rectangle overlay
+- Rectangle clip
+- BorderPane content
+- Image image
++ <<Create>> ImageBackgroundPanel(String,int)
++ BorderPane getContent()
++ boolean hasImage()
++ boolean setImage(String,int)
+- void setOverlayAlpha(int)
+- Image loadCached(String)
+- {static} Image load(String)
+# void layoutChildren()
+}
+
+class football.ui.EmojiText {
++ <<Create>> EmojiText(String,Font,Color)
+~ {static} List<Segment> split(String)
+- {static} boolean isEmojiCodePoint(int)
+}
+
+class football.ui.EmojiText$Segment {
+~ String text
+~ boolean emoji
+~ <<Create>> Segment(String,boolean)
+}
+
+class football.ui.UiTimer {
+- int delayMs
+- Runnable action
+- boolean repeats
+- boolean running
+- int generation
+- PauseTransition pause
++ <<Create>> UiTimer(int,Runnable)
++ void setRepeats(boolean)
++ boolean isRunning()
++ void start()
++ void stop()
+- void schedule(int)
+- void fire(int)
+}
+
+class football.ui.SoundManager {
++ {static} String MENU_MUSIC
++ {static} String GOAL_CHEER
++ {static} String GOAL_CONCEDED
++ {static} String WHISTLE_FOUL
++ {static} String WHISTLE_HALFTIME
++ {static} String WHISTLE_FULLTIME
+- {static} double MUSIC_VOLUME
++ {static} double SOFT_VOLUME
+- {static} Map<String,Media> mediaCache
+- {static} Set<MediaPlayer> activeEffects
+- {static} List<Runnable> muteListeners
+- {static} MediaPlayer menuPlayer
+- {static} boolean menuWanted
+- {static} boolean muted
+- <<Create>> SoundManager()
++ {static} boolean isMuted()
++ {static} void setMuted(boolean)
++ {static} void addMuteListener(Runnable)
++ {static} void playMenuMusic()
++ {static} void stopMenuMusic()
++ {static} void play(String)
++ {static} void play(String,double)
++ {static} void playAfter(String,int)
+- {static} Media loadMedia(String)
+}
+
+class football.ui.SoundToggleButton {
++ <<Create>> SoundToggleButton()
+- void refresh()
+}
+
+class football.ui.TacticHints {
+- {static} double SPECIALIST_THRESHOLD
+- {static} double LOW_EXPOSURE
+- {static} List<Tactic> TACTICS
+- {static} List<Formation> FORMATIONS
+- <<Create>> TacticHints()
+~ {static} String forTactic(String)
+~ {static} String forFormation(String)
+- {static} Tactic findTactic(String)
+- {static} Formation findFormation(String)
+- {static} void append(StringBuilder,String)
+}
+
+class football.util.PlayerRepository {
++ {static} List<Player> loadPlayersFromCSV(String)
+}
+
+class football.util.PlayerImageResolver {
+- <<Create>> PlayerImageResolver()
++ {static} String getPlayerImagePath(String)
+}
+
+class football.model.Player
+interface football.model.Tactic
+abstract class football.model.Formation
+
+javafx.scene.control.Button <|-- football.ui.SoundToggleButton
+javafx.scene.layout.StackPane <|-- football.ui.ImageBackgroundPanel
+javafx.scene.layout.HBox <|-- football.ui.EmojiText
+football.ui.EmojiText +.. football.ui.EmojiText$Segment
+football.ui.SoundToggleButton ..> football.ui.SoundManager
+football.ui.EmojiText ..> football.ui.EmojiText$Segment
+football.util.PlayerRepository ..> football.model.Player
+football.ui.TacticHints o-- football.model.Tactic : TACTICS
+football.ui.TacticHints o-- football.model.Formation : FORMATIONS
+@enduml

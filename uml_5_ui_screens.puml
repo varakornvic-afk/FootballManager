@@ -1,0 +1,217 @@
+@startuml
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 60
+
+class football.Main {
++ {static} void main(String[])
+}
+
+class football.ui.MainFrame {
+- StackPane cardPanel
+- MainMenuPanel mainMenuPanel
+- SquadPanel squadPanel
+- MatchPanel matchPanel
+- MatchController matchController
++ void start(Stage)
+- void showCard(Node)
+}
+
+class football.ui.MainMenuPanel {
+- {static} String BACKGROUND_PATH
++ <<Create>> MainMenuPanel(Runnable)
+- void addSoundButton()
+- {static} Image loadBackground()
+}
+
+class football.ui.SquadPanel {
+- {static} String BACKGROUND_PATH
+- {static} int OVERLAY_ALPHA
+- {static} Map<String,String> POSITION_ABBR
+- ComboBox<String> tacticComboBox
+- ObservableList<Player> poolListModel
+- ObservableList<Player> starterListModel
+- ObservableList<Player> benchListModel
+- ListView<Player> poolJList
+- Label statusCountLabel
+- BiConsumer<TeamSetup,TeamSetup> onSquadConfirmed
++ <<Create>> SquadPanel(BiConsumer<TeamSetup,TeamSetup>)
++ void startNewDraftSession()
+- void movePlayer(ListView<Player>,ObservableList<Player>,ObservableList<Player>,int)
+- void handleAutoSelect()
+- void handleConfirmSquad()
+- {static} void installHints(ComboBox<String>,Function<String,String>)
+- TitledPane createWrappedListPanel(String,ListView<Player>)
+- void updateCounts()
+}
+
+class football.ui.SquadPanel$CompactPlayerCell {
+# void updateItem(Player,boolean)
+- {static} String compact(String)
+}
+
+class football.ui.MatchPanel {
+- {static} String PREMATCH_BACKGROUND_PATH
+- {static} String MATCH_BACKGROUND_PATH
+- {static} int PREMATCH_OVERLAY_ALPHA
+- {static} int MATCH_OVERLAY_ALPHA
+- TextFlow matchLogArea
+- Label scoreBoardLabel
+- Label matchTimeLabel
+- ImageBackgroundPanel logBackground
+- Color logTextColor
++ <<Create>> MatchPanel(Runnable,Runnable)
++ void clearLog()
++ void showPreMatchBackground()
++ void showMatchBackground()
++ void resetToPreMatch()
++ void updateScoreBoard(int,int,int)
++ void appendColoredLog(String)
+}
+
+class football.ui.MatchController {
+- Stage parent
+- MatchPanel view
+- PopupManager popups
+- TeamSetup homeTeamSetup
+- TeamSetup homeOriginalSetup
+- Match currentMatch
+- UiTimer liveTimer
+- int currentEventIndex
+- boolean isSecondHalfRunning
+- List<MatchEvent> h1Events
+- List<MatchEvent> allMatchEvents
+- int liveHomeGoals
+- int homeSubsUsed
+- int awaySubsUsed
+- Set<String> yellowCardPlayers
+- Set<Player> redCardedPlayers
+- Set<Player> subbedOutPlayers
++ <<Create>> MatchController(Stage,MatchPanel)
++ void setTeams(TeamSetup,TeamSetup)
+- void resetTeamsForNewMatch()
+- Set<Player> unavailableForHome()
+- void recordSubbedOut(List<Player>,List<Player>)
+- void restoreStamina(TeamSetup)
++ void stop()
++ void runMatchSimulation()
+- void handleHalfTime()
+- void handleFullTime()
+- void playHalftimeSubPopupsThenStartSecondHalf(List<SubInfo>)
+- void playSubQueue(List<SubInfo>,int,String,Runnable)
+- void processEvent(MatchEvent)
+- void handlePenalty(MatchEvent,String,String,boolean)
+- String handleGoal(MatchEvent,String,String,String,boolean)
+- String handleSave(MatchEvent,String,String,boolean)
+- String handleRedCard(MatchEvent,String,String,String,boolean)
+- void handleYellowCard(MatchEvent,String,String,boolean)
+- String findKeeperName(TeamSetup)
+- void openMidMatchSubDialog()
+- void changeButtonTextInDialog(Parent,String)
+- void updateScoreBoard(int)
+- void appendColoredLog(String)
+}
+
+class football.ui.HalfTimeDialog {
+- TeamSetup updatedTeamSetup
+- boolean confirmed
+- int currentSubsUsed
+- int newSubsMadeInSession
+- Set<Player> subbedOutPlayers
+- TitledPane subPanel
++ <<Create>> HalfTimeDialog(Stage,TeamSetup,TeamSetup,Set<String>,Set<Player>,int)
+- void showMessage(Alert.AlertType,String,String)
+- {static} Text boldText(String)
+- {static} Text blueText(String)
+- {static} Text plainText(String)
+- String getPanelSubTitle(int)
+- void updateComboBoxModels(ComboBox<Player>,ComboBox<Player>,List<Player>,List<Player>,Set<String>)
++ TeamSetup getUpdatedTeamSetup()
++ boolean isConfirmed()
++ int getUpdatedSubsUsed()
+}
+
+class football.ui.HalfTimeDialog$PlayerCell {
+- Set<String> yellowCards
+~ <<Create>> PlayerCell(Set<String>)
+# void updateItem(Player,boolean)
+}
+
+class football.ui.EventPopupDialog {
+- {static} int IMG_BOX_W
+- {static} int IMG_BOX_H
++ <<Create>> EventPopupDialog(Stage,GameEvent,boolean)
++ {static} EventPopupDialog showPopup(Stage,GameEvent,boolean)
+}
+
+class football.ui.MatchSummaryDialog {
++ <<Create>> MatchSummaryDialog(Stage,String,String,int,int,MatchStatistics)
+- void addStatRow(GridPane,int,String,String,String)
+}
+
+class football.ui.PopupManager {
+- Stage parent
+- Supplier<UiTimer> liveTimerSupplier
+- List<EventPopupDialog> openPopups
++ <<Create>> PopupManager(Stage,Supplier<UiTimer>)
++ void showPopup(GameEvent,boolean)
++ void showEventPopupAndWait(GameEvent,boolean,boolean)
++ void closeCurrentPopup()
+}
+
+class football.logic.Match
+class football.logic.MatchStatistics
+class football.model.TeamSetup
+class football.model.Player
+class football.event.MatchEvent
+interface football.event.GameEvent
+class football.ui.UiTimer
+class football.ui.SoundManager
+class football.ui.SoundToggleButton
+class football.ui.TacticHints
+class football.ui.EmojiText
+class football.ui.ImageBackgroundPanel
+
+javafx.stage.Stage <|-- football.ui.EventPopupDialog
+javafx.stage.Stage <|-- football.ui.HalfTimeDialog
+football.ui.HalfTimeDialog +.. football.ui.HalfTimeDialog$PlayerCell
+javafx.scene.control.ListCell <|-- football.ui.HalfTimeDialog$PlayerCell
+football.ui.ImageBackgroundPanel <|-- football.ui.SquadPanel
+football.ui.SquadPanel +.. football.ui.SquadPanel$CompactPlayerCell
+javafx.scene.control.ListCell <|-- football.ui.SquadPanel$CompactPlayerCell
+javafx.scene.layout.BorderPane <|-- football.ui.MatchPanel
+javafx.stage.Stage <|-- football.ui.MatchSummaryDialog
+javafx.scene.layout.StackPane <|-- football.ui.MainMenuPanel
+javafx.application.Application <|-- football.ui.MainFrame
+football.Main ..> football.ui.MainFrame
+football.ui.MainFrame --> football.ui.MainMenuPanel
+football.ui.MainFrame --> football.ui.SquadPanel
+football.ui.MainFrame --> football.ui.MatchPanel
+football.ui.MainFrame --> football.ui.MatchController
+football.ui.MatchController --> football.ui.MatchPanel : view
+football.ui.MatchController --> football.ui.PopupManager : popups
+football.ui.MatchController --> football.ui.UiTimer : liveTimer
+football.ui.MatchController --> football.logic.Match : currentMatch
+football.ui.MatchController --> football.model.TeamSetup : homeTeamSetup
+football.ui.MatchController o-- football.event.MatchEvent : h1Events / allMatchEvents
+football.ui.MatchController ..> football.ui.HalfTimeDialog
+football.ui.MatchController ..> football.ui.MatchSummaryDialog
+football.ui.MatchController ..> football.ui.SoundManager
+football.ui.PopupManager o-- football.ui.EventPopupDialog : openPopups
+football.ui.PopupManager ..> football.ui.UiTimer
+football.ui.PopupManager ..> football.event.GameEvent
+football.ui.EventPopupDialog ..> football.event.GameEvent
+football.ui.HalfTimeDialog --> football.model.TeamSetup : updatedTeamSetup
+football.ui.HalfTimeDialog ..> football.model.Player
+football.ui.MatchSummaryDialog ..> football.logic.MatchStatistics
+football.ui.SquadPanel --> football.model.TeamSetup
+football.ui.SquadPanel o-- football.model.Player : pool / starters / bench
+football.ui.SquadPanel ..> football.ui.TacticHints
+football.ui.SquadPanel ..> football.ui.SoundToggleButton
+football.ui.MatchPanel --> football.ui.ImageBackgroundPanel : logBackground
+football.ui.MatchPanel ..> football.ui.EmojiText
+football.ui.MatchPanel ..> football.ui.SoundToggleButton
+football.ui.MainMenuPanel ..> football.ui.SoundToggleButton
+hide football.ui.MatchController fields
+hide football.ui.SquadPanel fields
+@enduml

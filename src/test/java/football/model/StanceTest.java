@@ -58,11 +58,4 @@ class StanceTest {
         assertEquals(new SlotLayout(1, 0, 2, 0, 3, 4),
                 Stance.ALL_OUT_ATTACK.apply(BASES[2]));
     }
-
-    @Test
-    void everyStanceHasADisplayLabel() {
-        for (Stance s : Stance.values()) {
-            assertFalse(s.getLabel().isBlank());
-        }
-    }
 }

@@ -66,8 +66,8 @@ public class EmojiText extends HBox {
     }
 
     private static boolean isEmojiCodePoint(int cp) {
-        return cp >= 0x1F000                      // 🧤 🟥 🟨 🎯 🛑 🔄 🔴 🟢 🚪
-                || (cp >= 0x2600 && cp <= 0x27BF) // ⚽ ➡
+        return cp >= 0x1F000
+                || (cp >= 0x2600 && cp <= 0x27BF)
                 || (cp >= 0x2B00 && cp <= 0x2BFF)
                 || cp == 0xFE0F                   // variation selector (ติดกับอีโมจิตัวก่อนหน้า)
                 || cp == 0x200D;                  // zero width joiner

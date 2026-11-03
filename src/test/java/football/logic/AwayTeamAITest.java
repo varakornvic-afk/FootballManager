@@ -15,7 +15,7 @@ class AwayTeamAITest {
             .filter(p -> p != Position.GK)
             .toList();
 
-    // ---------- ตัวช่วยสร้างข้อมูลทดสอบ ----------
+    // ตัวช่วยสร้างข้อมูลทดสอบ
 
     /** แบ่ง total ให้ parts ช่องใกล้เคียงกัน (ทำให้ผลรวมสถิติ = 24 พอดี) */
     private static int[] spread(int total, int parts) {
@@ -67,7 +67,7 @@ class AwayTeamAITest {
         return SubstitutionDetector.detect(before.getStarters(), after.getStarters(), false).size();
     }
 
-    // ---------- โควตาเปลี่ยนตัว ----------
+    // โควตาเปลี่ยนตัว
 
     @Test
     void halftimeSubsNeverExceedRemainingQuota() {
@@ -132,7 +132,7 @@ class AwayTeamAITest {
         assertEquals(1, keepers);
     }
 
-    // ---------- ปรับแผนตามสกอร์ ----------
+    // ปรับแผนตามสกอร์
 
     @Test
     void losingTeamGoesAllOutAttackWith433() {
@@ -165,7 +165,7 @@ class AwayTeamAITest {
         assertSame(original, result.getFormation());
     }
 
-    // ---------- เปลี่ยนตัวตอนโดนใบเหลือง ----------
+    // เปลี่ยนตัวตอนโดนใบเหลือง
 
     @Test
     void outfieldPlayerIsNotReplacedByGoalkeeper() {

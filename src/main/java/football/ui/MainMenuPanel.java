@@ -39,7 +39,7 @@ public class MainMenuPanel extends StackPane {
             // ไม่เจอไฟล์ภาพ: ใช้หน้าตาเดิม (พื้นสีเข้ม + ชื่อเกม + ปุ่ม)
             setBackground(new Background(new BackgroundFill(baseColor, CornerRadii.EMPTY, Insets.EMPTY)));
 
-            Label titleLabel = new Label("TACTIX FOOTBALL");
+            Label titleLabel = new Label("FOOTBALLTACTIX");
             titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
             titleLabel.setTextFill(Color.WHITE);
 
