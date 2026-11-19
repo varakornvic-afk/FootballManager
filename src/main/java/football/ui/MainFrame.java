@@ -40,7 +40,7 @@ public class MainFrame extends Application {
 
         showCard(mainMenuPanel);
 
-        stage.setScene(new Scene(cardPanel, 1100, 750));
+        stage.setScene(new Scene(cardPanel, 1280, 720));
         stage.centerOnScreen();
         stage.show();
     }

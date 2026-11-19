@@ -74,7 +74,7 @@ public class MatchSummaryDialog extends Stage {
         root.setCenter(statsPanel);
 
         // 3. Close Button
-        Button closeBtn = new Button("Close & Return to Menu");
+        Button closeBtn = new Button("Close");
         closeBtn.setFont(Font.font("SansSerif", FontWeight.BOLD, 12));
         closeBtn.setOnAction(e -> close());
 
