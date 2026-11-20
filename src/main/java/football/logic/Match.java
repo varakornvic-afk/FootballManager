@@ -3,6 +3,10 @@ package football.logic;
 import football.model.Player;
 import football.model.TeamSetup;
 
+/**
+ * แมตช์หนึ่งนัด เล่นได้ทีละครึ่ง (ครึ่งแรกแล้วครึ่งหลัง) โดยใช้ MatchEngine จำลองเหตุการณ์
+ * และลดความเหนื่อยของผู้เล่นระหว่างทาง
+ */
 public class Match {
     private TeamSetup homeTeam;
     private TeamSetup awayTeam;
@@ -17,6 +21,7 @@ public class Match {
         this.engine = new MatchEngine(seed);
     }
 
+    /** จำลองครึ่งแรก (นาที 1-45) และคืนผลของครึ่งนั้น */
     public MatchHalfResult playFirstHalf() {
         if (firstHalfPlayed) {
             throw new IllegalStateException("First half has already been played");
@@ -29,6 +34,7 @@ public class Match {
         return result;
     }
 
+    /** จำลองครึ่งหลัง (นาที 46-90) และคืนผลของครึ่งนั้น */
     public MatchHalfResult playSecondHalf() {
         if (!firstHalfPlayed) {
             throw new IllegalStateException("Cannot play second half before first half");

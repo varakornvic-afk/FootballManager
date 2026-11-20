@@ -1,5 +1,10 @@
 package football.model;
 
+/**
+ * ฟอร์เมชันของทีม (เช่น 4-4-2) เก็บค่าโจมตี คุมเกม ป้องกัน และ exposure
+ * (ยิ่งสูงยิ่งเสียหนักเมื่อแพ้ทางแผน) คลาสลูกกำหนดช่องตำแหน่ง (getSlots)
+ * และความเหมาะกับแต่ละแผน (fitFor)
+ */
 public abstract class Formation {
     protected static final double SPECIALIST_FIT = 1.15;  // ตรงแผนที่ฟอร์เมชันนี้ถนัด
     protected static final double OFF_PLAN_FIT = 0.95;    // ไม่ตรงแผน

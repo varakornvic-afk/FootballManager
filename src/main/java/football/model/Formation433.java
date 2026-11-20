@@ -1,5 +1,8 @@
 package football.model;
 
+/**
+ * ฟอร์เมชัน 4-3-3 คุมเกมได้ดี เหมาะกับแผน Possession
+ */
 public class Formation433 extends Formation {
     public Formation433() {
         super("4-3-3", 5, 6, 4, 1.5);

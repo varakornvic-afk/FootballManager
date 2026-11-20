@@ -4,10 +4,15 @@ import football.event.*;
 import football.event.MatchEvent;
 import football.model.*;
 
+/**
+ * ปรับความเหนื่อย (stamina) ของผู้เล่นตามเหตุการณ์ในแมตช์
+ * เช่น ผู้เล่นที่ทำเหตุการณ์ ผู้เล่นสนามทั้งสองทีมทุก 20 นาที และการนับเซฟของผู้รักษาประตู
+ */
 public final class StaminaManager {
 
     private StaminaManager() {}
 
+    /** ปรับ stamina ตามเหตุการณ์หนึ่งครั้ง */
     public static void updatePlayersStamina(MatchEvent ev, TeamSetup homeTeamSetup, TeamSetup awayTeamSetup) {
         int minute = ev.getMinute();
 

@@ -26,6 +26,10 @@ import javafx.util.Duration;
 
 import java.net.URL;
 
+/**
+ * ป๊อปอัปแจ้งเหตุการณ์ในแมตช์ (ประตู เซฟ ใบ จุดโทษ เปลี่ยนตัว)
+ * แสดงรูปผู้เล่นและหัวข้อตามข้อมูลของ GameEvent
+ */
 public class EventPopupDialog extends Stage {
     private static final int IMG_BOX_W = 220;
     private static final int IMG_BOX_H = 270;

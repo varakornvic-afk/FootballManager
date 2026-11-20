@@ -2,6 +2,10 @@ package football.event;
 
 import football.model.Player;
 
+/**
+ * เหตุการณ์หนึ่งครั้งที่เกิดในแมตช์ เก็บนาที ทีม ผู้เล่น ชนิดเหตุการณ์ และข้อความอธิบาย
+ * สร้างโดย MatchEngine และใช้ต่อใน MatchStatistics, StaminaManager และหน้าแมตช์
+ */
 public class MatchEvent {
     public enum EventType {
         GOAL,

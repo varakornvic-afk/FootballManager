@@ -23,6 +23,10 @@ import javafx.scene.text.FontWeight;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * หน้าเมนูหลัก มีปุ่ม Start Game, Exit และปุ่มเปิดปิดเสียง
+ * ใช้ภาพพื้นหลัง ถ้าโหลดภาพไม่ได้จะใช้สีพื้นแทน
+ */
 public class MainMenuPanel extends StackPane {
     private static final String BACKGROUND_PATH = "/image/menu_bg.png";
 

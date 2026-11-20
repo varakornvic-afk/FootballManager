@@ -1,5 +1,9 @@
 package football.model;
 
+/**
+ * แผนสวนกลับ ตั้งรับลึกแล้วเปิดเกมเร็ว ชนะแผน Possession
+ * ความเหมาะของผู้เล่นวัดจากความเร็ว (Pace) และกองหน้าที่เร็วได้โบนัสเพิ่ม
+ */
 public class CounterAttack implements Tactic {
     @Override
     public String getName() { return "Counter Attack"; }

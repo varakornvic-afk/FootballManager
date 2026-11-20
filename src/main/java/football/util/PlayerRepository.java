@@ -10,6 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * อ่านข้อมูลผู้เล่นจากไฟล์ CSV ใน resources (players.csv) แล้วสร้างเป็น Player หรือ GoalKeeper
+ */
 public class PlayerRepository {
 
     /**

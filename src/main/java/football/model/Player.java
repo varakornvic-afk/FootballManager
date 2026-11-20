@@ -1,5 +1,10 @@
 package football.model;
 
+/**
+ * ผู้เล่นสนามหนึ่งคน มีตำแหน่งและสถิติ 6 ค่า (pace, passing, heading, stamina, shoot, defense)
+ * แต่ละค่า 1-10 รวมกัน 24 คะแนน เฉพาะ stamina ที่เปลี่ยนได้ระหว่างแมตช์
+ * ผู้รักษาประตูใช้คลาส GoalKeeper
+ */
 public class Player {
     public static final int TOTAL = 24;
     public static final int MIN_STAT = 1;

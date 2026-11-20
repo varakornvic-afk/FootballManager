@@ -1,5 +1,9 @@
 package football.model;
 
+/**
+ * ผู้รักษาประตู สืบทอดจาก Player และมีค่า saving เพิ่ม
+ * นับจำนวนเซฟในเกม ทุก 3 ครั้งจะลด stamina ลง 1 หน่วย
+ */
 public class GoalKeeper extends Player {
     private int saveCount = 0; // ตัวแปรนับจำนวนเซฟในเกม
 

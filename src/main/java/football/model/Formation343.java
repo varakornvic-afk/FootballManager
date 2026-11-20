@@ -1,5 +1,8 @@
 package football.model;
 
+/**
+ * ฟอร์เมชัน 3-4-3 เน้นบุก เหมาะกับแผน Wide Play
+ */
 public class Formation343 extends Formation {
     public Formation343() {
         super("3-4-3", 6, 5, 4, 1.5);

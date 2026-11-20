@@ -7,6 +7,9 @@ import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
+/**
+ * คลาสหลักของแอป JavaFX สร้างหน้าต่างเกมและสลับหน้าจอระหว่างเมนู จัดทีม และแมตช์
+ */
 public class MainFrame extends Application {
     private final StackPane cardPanel = new StackPane();
 
@@ -15,6 +18,7 @@ public class MainFrame extends Application {
     private MatchPanel matchPanel;
     private MatchController matchController;
 
+    /** เริ่มแอป สร้างหน้าจอทั้งหมดและแสดงหน้าเมนู */
     @Override
     public void start(Stage stage) {
         stage.setTitle("FootballTactix");

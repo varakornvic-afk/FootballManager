@@ -29,6 +29,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * หน้าต่างช่วงพักครึ่ง ให้ผู้เล่นเปลี่ยนตัวก่อนเริ่มครึ่งหลัง
+ * แล้วคืนทีมที่แก้และจำนวนการเปลี่ยนตัวที่ใช้ไปแล้ว
+ */
 public class HalfTimeDialog extends Stage {
     private TeamSetup updatedTeamSetup;
     private boolean confirmed = false;

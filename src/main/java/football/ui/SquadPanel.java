@@ -29,6 +29,10 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+/**
+ * หน้าจัดทีมก่อนแข่ง เลือกตัวจริง ตัวสำรอง แผนการเล่น และฟอร์เมชัน
+ * เมื่อยืนยันแล้วส่งทีมเหย้าและทีมเยือนไปให้หน้าแมตช์
+ */
 public class SquadPanel extends ImageBackgroundPanel {
     private static final String BACKGROUND_PATH = "/image/squad_bg.png";
     private static final int OVERLAY_ALPHA = 0; // ภาพซีดอยู่แล้ว ไม่ต้องทับแผ่นดำ

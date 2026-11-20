@@ -1,5 +1,9 @@
 package football.model;
 
+/**
+ * ฟอร์เมชัน 5-3-2 เน้นตั้งรับ เหมาะกับแผน Counter Attack
+ * แต่ไม่เหมาะกับ Wide Play เพราะไม่มีปีก
+ */
 public class Formation532 extends Formation {
     public Formation532() {
         super("5-3-2", 3, 5, 7, 1.5);

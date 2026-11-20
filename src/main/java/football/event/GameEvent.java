@@ -2,6 +2,10 @@ package football.event;
 
 import javafx.scene.paint.Color;
 
+/**
+ * ข้อมูลของป๊อปอัปเหตุการณ์ในแมตช์ (ประตู เซฟ ฟาวล์ ใบเหลือง/แดง จุดโทษ เปลี่ยนตัว)
+ * บอกหัวข้อ ชื่อผู้เล่น รูป และสีธีมของป๊อปอัปแต่ละแบบ โดยแต่ละเหตุการณ์เป็นคลาสลูกของ BaseGameEvent
+ */
 public interface GameEvent {
     String getEventTitle();
     String getPlayerName();

@@ -56,4 +56,8 @@ tasks.withType(JavaCompile).configureEach {
 }
 javadoc {
     options.encoding = 'UTF-8'
+    options.addStringOption('charset', 'UTF-8')
+    options.addStringOption('docencoding', 'UTF-8')
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.windowTitle = 'FootballTactix API'
 }

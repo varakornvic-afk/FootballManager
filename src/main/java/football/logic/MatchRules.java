@@ -3,6 +3,10 @@ package football.logic;
 import football.model.Formation;
 import football.model.Tactic;
 
+/**
+ * กติกาของวงกลมแทคติก คืนตัวคูณโบนัสเมื่อชนะทางแผน
+ * และตัวคูณที่เสียเมื่อแพ้ทาง ซึ่งมากน้อยตาม exposure ของฟอร์เมชัน
+ */
 public final class MatchRules {
     public static final double TACTIC_ADVANTAGE = 1.25;
     public static final double BASE_PENALTY = 0.2;

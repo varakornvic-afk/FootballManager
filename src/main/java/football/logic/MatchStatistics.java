@@ -3,6 +3,10 @@ package football.logic;
 import football.event.MatchEvent;
 import java.util.List;
 
+/**
+ * สถิติของแมตช์ ได้แก่ จำนวนยิง ยิงเข้ากรอบ ใบเหลือง ใบแดง และเปอร์เซ็นต์การครองบอล
+ * คำนวณจากรายการเหตุการณ์ด้วยเมธอด calculate
+ */
 public class MatchStatistics {
     private int homeShots = 0;
     private int awayShots = 0;
@@ -15,6 +19,7 @@ public class MatchStatistics {
     private int homePossessionPercent = 50;
     private int awayPossessionPercent = 50;
 
+    /** คำนวณสถิติทั้งหมดจากรายการเหตุการณ์ของแมตช์ */
     public static MatchStatistics calculate(List<MatchEvent> events) {
         MatchStatistics stats = new MatchStatistics();
         if (events == null || events.isEmpty()) {

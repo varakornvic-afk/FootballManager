@@ -17,6 +17,9 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextAlignment;
 import javafx.scene.text.TextFlow;
 
+/**
+ * หน้าแมตช์ แสดงสกอร์ นาที และ log เหตุการณ์ พร้อมปุ่ม Play Match และ Back to Menu
+ */
 public class MatchPanel extends BorderPane {
     private static final String PREMATCH_BACKGROUND_PATH = "/image/prematch_bg.png";
     private static final String MATCH_BACKGROUND_PATH = "/image/match_bg.png";
@@ -82,6 +85,7 @@ public class MatchPanel extends BorderPane {
         backButton.setOnAction(e -> onBack.run());
     }
 
+    /** ล้างข้อความใน log ของแมตช์ */
     public void clearLog() {
         matchLogArea.getChildren().clear();
     }
@@ -103,11 +107,13 @@ public class MatchPanel extends BorderPane {
         showPreMatchBackground();
     }
 
+    /** อัปเดตสกอร์และนาทีบนแถบด้านบน */
     public void updateScoreBoard(int homeGoals, int awayGoals, int minute) {
         scoreBoardLabel.setText(String.format("HOME  %d - %d  AWAY", homeGoals, awayGoals));
         matchTimeLabel.setText(String.format("⏱️ %d'", minute));
     }
 
+    /** เพิ่มข้อความหนึ่งบรรทัดลงใน log ของแมตช์ */
     public void appendColoredLog(String text) {
         // แยกอีโมจิกับตัวอักษรเป็นคนละ Text (Text เดียวที่ปนกันอาจทำให้ตัวอักษรหายบน macOS)
         for (EmojiText.Segment seg : EmojiText.split(text)) {

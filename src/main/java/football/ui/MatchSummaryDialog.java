@@ -21,6 +21,9 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+/**
+ * หน้าต่างสรุปผลหลังจบแมตช์ แสดงสกอร์และสถิติของทั้งสองทีม
+ */
 public class MatchSummaryDialog extends Stage {
 
     public MatchSummaryDialog(Stage owner, String homeTeamName, String awayTeamName,

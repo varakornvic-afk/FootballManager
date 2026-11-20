@@ -2,6 +2,10 @@ package football.model;
 
 import static football.model.Position.*;
 
+/**
+ * ท่าทีเกมของทีม ได้แก่ NORMAL, PARK_THE_BUS (ถอยลงมาตั้งรับ) และ ALL_OUT_ATTACK (ดันขึ้นบุก)
+ * แต่ละท่าทีปรับช่องตำแหน่งของฟอร์เมชันด้วยเมธอด apply
+ */
 public enum Stance {
     NORMAL,
     PARK_THE_BUS,

@@ -3,6 +3,10 @@ package football.model;
 import java.util.EnumMap;
 import java.util.Map;
 
+/**
+ * จำนวนช่องของผู้เล่นสนามแต่ละตำแหน่งในฟอร์เมชัน รวมต้องได้ 10 ช่อง (ผู้รักษาประตูแยกอีก 1 คน)
+ * เป็นออบเจกต์ที่เปลี่ยนค่าไม่ได้ และเทียบกันด้วยค่า
+ */
 public final class SlotLayout {
     public static final int OUTFIELD_SLOTS = 10;
 

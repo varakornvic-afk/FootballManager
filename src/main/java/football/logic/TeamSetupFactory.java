@@ -8,6 +8,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * สร้าง TeamSetup ของทีมเหย้าจากตัวเลือกบนหน้าจัดทีม (ชื่อแผนและฟอร์เมชัน)
+ * และสร้างทีมเยือนแบบสุ่ม
+ */
 public final class TeamSetupFactory {
 
     private TeamSetupFactory() {}

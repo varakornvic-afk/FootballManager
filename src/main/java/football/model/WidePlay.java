@@ -1,5 +1,9 @@
 package football.model;
 
+/**
+ * แผนเล่นริมเส้น เปิดบอลให้โหม่ง ชนะแผน Counter Attack
+ * ความเหมาะของผู้เล่นวัดจากการโหม่ง และปีก (MIDWING) ได้โบนัสจากการจ่ายบอล
+ */
 public class WidePlay implements Tactic {
     @Override
     public String getName() { return "Wide Play"; }

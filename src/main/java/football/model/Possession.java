@@ -1,5 +1,8 @@
 package football.model;
 
+/**
+ * แผนครองบอล ต่อบอลขึ้นหน้าทั้งทีม ชนะแผน Wide Play
+ */
 public class Possession implements Tactic {
     @Override
     public String getName() { return "Possession"; }

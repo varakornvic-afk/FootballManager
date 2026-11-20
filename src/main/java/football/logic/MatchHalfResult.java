@@ -5,6 +5,9 @@ import football.event.MatchEvent;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * ผลของการจำลองหนึ่งครึ่ง ได้แก่ จำนวนประตูของทีมเหย้า และรายการเหตุการณ์ทั้งหมดในครึ่งนั้น
+ */
 public class MatchHalfResult {
     private final int homeGoals;
     private final List<MatchEvent> events;

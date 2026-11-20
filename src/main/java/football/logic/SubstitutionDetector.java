@@ -5,6 +5,9 @@ import football.model.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * เปรียบเทียบตัวจริงก่อนและหลังแก้ไขช่วงพักครึ่ง เพื่อหาว่าเปลี่ยนใครออกและใครเข้า
+ */
 public final class SubstitutionDetector {
 
     private SubstitutionDetector() {}
